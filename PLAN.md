@@ -2,6 +2,8 @@
 
 Planning date: 8 October 2026. Scope: a plan for a local desktop product, not a finished application.
 
+The [PRD.md](PRD.md) specifies detailed product requirements and release gates. It refines microphone capture to direct PCM through Web Audio and sets Windows 11 x64 as the first validation platform; Windows 10 remains exploratory until tested.
+
 ## 1. Product and first customer
 
 **Float Dot is a small, visible desktop companion that answers spoken questions about a selected window.** The first audience is developers and coding learners who keep switching between their editor, browser, and chat assistant.
@@ -50,7 +52,7 @@ Practice mode should teach progressively. Meeting transcription starts through a
 | --- | --- | --- |
 | Desktop | Electron + JavaScript, retaining audited upstream components | Faster reuse; measure memory footprint and update dependencies before release |
 | Capture | Electron capture service with explicit window selection and crop | One snapshot per request; ensure overlay exclusion and correct monitor scaling |
-| Microphone | Renderer MediaRecorder, converted locally to required PCM format | Avoid relying on browser speech services that may use remote processing |
+| Microphone | Renderer getUserMedia + Web Audio AudioWorklet, local PCM16 WAV encoding | Verify resampling/mono conversion; avoid remote browser speech services and required compressed-audio tooling |
 | Speech recognition | whisper.cpp with a small downloaded Whisper model | Local CPU operation and Windows support; accent/noise quality must be measured |
 | Text extraction | Tesseract OCR, local worker | Practical text-first baseline; indentation and punctuation may be misread |
 | Reasoning | Ollama local API + quantized `qwen3:4b` candidate | Text model consumes OCR/transcript, not screenshots |
@@ -70,7 +72,7 @@ Do not make a cloud free tier a required dependency. Provider quotas, model avai
 
 The machine's RAM/GPU could not be read in this session because system inventory access was unavailable. The following are benchmark targets, not verified minimum requirements:
 
-- Start testing on Windows 10/11 x64, 16 GB RAM, an existing microphone, and roughly 10 GB free disk for dependencies/models.
+- Start testing on Windows 11 x64, 16 GB RAM, an existing microphone, and roughly 10 GB free disk for dependencies/models; assess Windows 10 separately before claiming support.
 - Compare an 8 GB RAM CPU-only machine with a smaller text model before advertising low-end support.
 - GPU acceleration is optional for the text-first experiment; measure responsiveness before promising it.
 - Run speech and reasoning sequentially when memory is constrained. Bound retained context and allow models to unload.

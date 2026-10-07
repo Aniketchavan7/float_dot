@@ -16,6 +16,14 @@ Checked on 8 October 2026. These links support technical feasibility and licensi
 | [Qwen3:4b Ollama tag](https://ollama.com/library/qwen3:4b) | A downloadable quantized candidate; currently about 2.5 GB |
 | [Tesseract](https://github.com/tesseract-ocr/tesseract) | Local OCR engine and Apache 2.0 runtime license |
 | [Gemma 3 model card](https://ai.google.dev/gemma/docs/core/model_card_3) | Optional image-capable model variants and model-specific conditions |
+| [Electron security](https://www.electronjs.org/docs/latest/tutorial/security) | Renderer isolation/sandboxing, IPC validation, permissions, navigation and CSP guidance |
+| [Electron desktopCapturer](https://www.electronjs.org/docs/latest/api/desktop-capturer) | Window/screen source enumeration and capture thumbnail sizing |
+| [Ollama chat API](https://docs.ollama.com/api/chat) | Streaming, thinking controls, model-specific capabilities and keep-alive settings |
+| [Tesseract tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) | Fast OCR trained data with Apache 2.0 licensing and accuracy/speed tradeoffs |
+| [AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) | Audio processing thread and secure-context requirements |
+| [SpeechSynthesisVoice localService](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisVoice/localService) | Local versus remote voice indication, to combine with offline testing |
+| [DOMPurify](https://github.com/cure53/DOMPurify) | Candidate sanitizer for generated answer HTML |
+| [electron-builder](https://www.electron.build/) | Desktop application packaging tooling |
 
 ## Implementation-time checks
 

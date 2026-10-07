@@ -6,7 +6,7 @@ All tasks are unstarted. Order is dependency-driven. P0 builds the core; P1 comp
 
 - [ ] **FD-001 — Audit and pin upstream.** Record commit/hash, license/NOTICE files, asset provenance, dependencies, scripts, capture code, IPC, renderer permissions, and remote calls. Decide which modules to reuse. Deliver an audit note; do not run setup scripts before reviewing them.
 - [ ] **FD-002 — Hardware and local-model spike.** Record CPU/RAM/GPU with an available method, benchmark the proposed text model and a smaller alternative, and set context/output limits. Deliver cold/warm timing and memory results. Depends on FD-001 for any reused code.
-- [ ] **FD-003 — ASR spike.** Record five short technical questions, convert audio locally, transcribe with whisper.cpp, and measure errors/latency. Missing microphone/model must return a useful error. May run independently of FD-002 after dependency review.
+- [ ] **FD-003 — ASR spike.** Record five short technical questions using Web Audio, resample/downmix locally to 16 kHz mono PCM16 WAV, transcribe with whisper.cpp, and measure errors/latency. Verify AudioWorklet compatibility and microphone release. Missing microphone/model must return a useful error. May run independently of FD-002 after dependency review.
 - [ ] **FD-004 — OCR spike.** Evaluate ten selected-window text/code screenshots with known text; identify punctuation/indentation failures and the need for cropping. Deliver fixtures and findings.
 - [ ] **FD-005 — Local provider adapter.** Implement readiness and streamed answers against a configured loopback endpoint using local models. Bound timeouts, support cancellation, and prohibit silent cloud fallback. Depends on FD-002.
 - [ ] **FD-006 — One-shot pipeline.** Join voice + screenshot + OCR + prompt + local model. Use synthetic fixtures first; attach source/time to every request. Deliver three end-to-end demonstrations. Depends on FD-003/004/005.
@@ -23,7 +23,7 @@ All tasks are unstarted. Order is dependency-driven. P0 builds the core; P1 comp
 - [ ] **FD-014 — Quality/performance gate.** Run the 30-case corpus, cancellation/missing-dependency cases, offline/network checks, and reference-machine latency measurement. Publish actual results and supported limits. Depends on FD-010/012.
 - [ ] **FD-015 — Windows portable build.** Use platform-compatible scripts, pin supported runtime/dependencies, package required notices, document model installation, and smoke-test outside the checkout. Depends on FD-011/014.
 - [ ] **FD-016 — Tester kit.** Create synthetic demo assets, a short setup guide, known issues, a feedback form/list, and a 60-second demonstration script. Depends on FD-015.
-- [ ] **FD-017 — First paid pilot.** Identify repeat users, show a concrete workflow/setup deliverable, agree scope/support, test proposed pricing, and record actual sales/declines/support time. Depends on FD-016 and repeat-use evidence. Human outreach is a launch task, not an automated message action.
+- [ ] **FD-017 — First paid pilot.** Prototype a reviewed workflow export as appropriate, identify repeat users, show a concrete workflow/setup deliverable, agree scope/support, test proposed pricing, and record actual sales/declines/support time. Depends on FD-016 and repeat-use evidence. Human outreach is a launch task, not an automated message action.
 
 ## P2: expand when the core is useful
 

@@ -4,7 +4,7 @@
 
 A floating desktop assistant: press a shortcut, ask a question with your microphone, and get an answer grounded in the window you selected. Start with coding practice and debugging; expand into meeting and document help after the core works.
 
-Status: planning complete; application implementation has not started.
+Status: plan and PRD written; application implementation has not started.
 
 ## Decisions
 
@@ -18,6 +18,7 @@ Status: planning complete; application implementation has not started.
 
 | File | Purpose |
 | --- | --- |
+| [PRD.md](PRD.md) | Complete product requirements, proposed tech stack, user journeys, data limits, and acceptance criteria |
 | [PLAN.md](PLAN.md) | Product, architecture, use cases, milestones, cost model, and launch strategy |
 | [BACKLOG.md](BACKLOG.md) | Ordered engineering tasks with acceptance criteria |
 | [SOURCES.md](SOURCES.md) | Primary references and facts verified on 8 October 2026 |
