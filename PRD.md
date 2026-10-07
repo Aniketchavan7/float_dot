@@ -1,6 +1,6 @@
 # Float Dot — Product Requirements Document
 
-Version: 1.0 · Date: 8 October 2026 · Owner: Aniket · Stage: pre-implementation
+Version: 1.1 · Date: 8 October 2026 · Owner: Aniket · Stage: pre-implementation
 
 This PRD defines the proposed product and acceptance criteria. It is not a description of an implemented application. It is authoritative for product requirements; [PLAN.md](PLAN.md) provides the execution/revenue plan and [BACKLOG.md](BACKLOG.md) tracks implementation tasks. Version numbers and model digests will be pinned during the technical spike.
 
@@ -273,7 +273,7 @@ Meeting work begins after the MVP gate passes. Start with explicit microphone tr
 - Evaluate a synthetic 30-minute meeting, pauses, overlapping speech, headphones, device switching, interruption, and crash cleanup.
 - Proposed meeting gate: at least 90% of annotated decisions recovered with no unsupported decisions presented as settled facts. Report omissions and ambiguous speech separately.
 
-Meeting settings/retention policy must be presented before recording. Its release schedule depends on audio reliability; it is not guaranteed by the initial five-week estimate.
+Meeting settings/retention policy must be presented before recording. Its release schedule depends on audio reliability; estimate an additional 40-80 focused hours after the MVP, with no fixed completion promise.
 
 ## 14. Evaluation and analytics
 
@@ -311,7 +311,7 @@ Early delivery can be manual with no account server. Track sales, fees, refunds,
 
 ## 16. Execution plan and dependencies
 
-One-developer estimate: approximately five weeks at 10-15 focused hours/week, re-estimated after the spike. The priority is exit evidence, not a calendar promise.
+Revised one-developer estimate: 94-140 focused hours, approximately 4-6 weeks at 25 hours/week or 7-10 weeks at 15 hours/week, followed by about one week of repeat-use/pilot feedback. This replaces the earlier five-week estimate at 10-15 hours/week after inspecting the actual reference code. See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for stage estimates and the pinned source reuse map. Re-estimate after the spike. The priority is exit evidence, not a calendar promise.
 
 | Milestone | Deliverables | Gate |
 | --- | --- | --- |
@@ -323,7 +323,7 @@ One-developer estimate: approximately five weeks at 10-15 focused hours/week, re
 
 Critical path: dependency/provenance review -> local benchmarks -> integrated pipeline -> lifecycle/UI -> evaluation/package -> repeat-use testing. Optional speech output and paid infrastructure cannot block core release.
 
-Before importing OpenCluely, pin a commit, inspect source/scripts, review license/NOTICE/assets/dependencies, and decide modules to reuse. See [PLAN.md](PLAN.md) for the observed Apache/MIT/ISC label discrepancy. Preserve required upstream notices and mark modifications. Audit capture, speech, LLM, window, and session seams rather than executing upstream setup blindly.
+OpenCluely reference is pinned at `0a9da75135f5aade3a067d86a7c8bb73f372f014` in an ignored local checkout. Source triage and the reuse map are complete; application import and full runtime/dependency/asset audit are not. Before importing modules, complete license/NOTICE/assets/dependencies/script review. See [PLAN.md](PLAN.md) for the observed Apache/MIT/ISC label discrepancy. Preserve required upstream notices and mark modifications. Audit capture, speech, LLM, window, and session seams rather than executing upstream setup blindly.
 
 ## 17. Risks and decision gates
 

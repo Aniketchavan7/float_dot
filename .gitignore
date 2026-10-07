@@ -1,0 +1,2 @@
+# Read-only reference checkouts are kept local, not redistributed with our docs.
+.reference/

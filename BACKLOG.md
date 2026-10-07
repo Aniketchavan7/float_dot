@@ -1,10 +1,10 @@
 # Float Dot implementation backlog
 
-All tasks are unstarted. Order is dependency-driven. P0 builds the core; P1 completes tester readiness; P2 expands only after evidence supports it.
+Application implementation is unstarted. FD-001 has a pinned reference checkout and source triage complete; the full audit remains open. Order is dependency-driven. P0 builds the core; P1 completes tester readiness; P2 expands only after evidence supports it. See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for the current estimate.
 
 ## P0: prove and build the core
 
-- [ ] **FD-001 — Audit and pin upstream.** Record commit/hash, license/NOTICE files, asset provenance, dependencies, scripts, capture code, IPC, renderer permissions, and remote calls. Decide which modules to reuse. Deliver an audit note; do not run setup scripts before reviewing them.
+- [ ] **FD-001 — Audit and pin upstream.** Pin/reference triage complete at `0a9da75135f5aade3a067d86a7c8bb73f372f014`; reuse map recorded. Remaining: full license/NOTICE/asset/dependency/script audit, capture/IPC/renderer/logging/cleanup review, and runtime verification. Do not run setup scripts before reviewing them.
 - [ ] **FD-002 — Hardware and local-model spike.** Record CPU/RAM/GPU with an available method, benchmark the proposed text model and a smaller alternative, and set context/output limits. Deliver cold/warm timing and memory results. Depends on FD-001 for any reused code.
 - [ ] **FD-003 — ASR spike.** Record five short technical questions using Web Audio, resample/downmix locally to 16 kHz mono PCM16 WAV, transcribe with whisper.cpp, and measure errors/latency. Verify AudioWorklet compatibility and microphone release. Missing microphone/model must return a useful error. May run independently of FD-002 after dependency review.
 - [ ] **FD-004 — OCR spike.** Evaluate ten selected-window text/code screenshots with known text; identify punctuation/indentation failures and the need for cropping. Deliver fixtures and findings.

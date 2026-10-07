@@ -119,7 +119,7 @@ Keep Node out of renderer pages, expose a narrow preload API, validate IPC paylo
 
 ## 7. Reuse OpenCluely carefully
 
-The upstream [main.js](https://github.com/TechyCSR/OpenCluely/blob/main/main.js) wires capture, speech, LLM, window, and session services. That suggests useful seams for adaptation; it is not an audit of those implementations.
+The upstream main.js wires capture, speech, LLM, window, and session services. A pinned local checkout has now been inspected; see [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for the exact commit and concrete reuse map. This is source triage rather than a completed runtime/dependency audit.
 
 | Upstream area | Planned treatment |
 | --- | --- |
@@ -134,19 +134,19 @@ The upstream [main.js](https://github.com/TechyCSR/OpenCluely/blob/main/main.js)
 
 Before reuse, pin a commit and save its provenance. The repository currently has conflicting labels: [LICENSE](https://github.com/TechyCSR/OpenCluely/blob/main/LICENSE) contains Apache 2.0, README says MIT, and [package.json](https://github.com/TechyCSR/OpenCluely/blob/main/package.json) says ISC. Review the pinned files and any distinct asset/dependency licenses. Preserve required notices, ship the applicable license, mark modified files, and include NOTICE attribution if present. Do not claim ownership of upstream code or reuse its branding as ours.
 
-No upstream code has been copied into this planning folder yet.
+An unmodified upstream checkout is available locally at `.reference/OpenCluely/`, excluded from Git. No upstream source has been imported into Float Dot application code and no upstream setup/executable has been run.
 
-## 8. Five-week execution sequence
+## 8. Execution sequence and revised timeline
 
-Estimate for one developer working roughly 10-15 focused hours per week, starting after scope approval. Re-estimate after the hardware spike. Advance by passing the milestone gate, not just reaching a date.
+Current estimate: 94-140 focused engineering hours for one developer, about 4-6 weeks at 25 hours/week or 7-10 weeks at 15 hours/week. Add about one week for repeat-use/pilot feedback. This replaces the earlier optimistic five-week estimate at 10-15 hours/week. Detailed assumptions and add-on estimates are in [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md). Re-estimate after the hardware spike. Advance by passing the milestone gate, not just reaching a date.
 
 | Milestone | Work | Exit gate |
 | --- | --- | --- |
-| Week 1: prove local loop | Audit/pin upstream; benchmark transcription, OCR, and local model on synthetic samples | One screenshot + voice question -> useful offline answer; measurements recorded |
-| Week 2: usable desktop | Dot, capture chooser, push-to-talk, preview, states, cancellation | Complete 10 consecutive requests without crashes, source confusion, or lingering recording |
-| Week 3: useful coding assistant | DSA hint ladder, debugging mode, context limits, Markdown, optional voice | Quality gate below passes on representative samples |
-| Week 4: ship tester build | Local onboarding, portable package, cleanup, error handling, settings | Five testers can set up from written instructions; core works with network disconnected |
-| Week 5: validate paid value | Demo, user interviews, workflow-pack prototype, paid setup pilot | Document willingness to pay, actual purchases, support time, and retention |
+| Stage 1: prove local loop | Complete upstream audit; benchmark transcription, OCR, and local model on synthetic samples | One screenshot + voice question -> useful offline answer; measurements recorded |
+| Stage 2: usable desktop | Local pipeline, dot, capture chooser, push-to-talk, preview, states, cancellation | Complete 10 consecutive requests without crashes, source confusion, or lingering recording |
+| Stage 3: useful coding assistant | DSA hint ladder, debugging mode, context limits, Markdown, optional voice | Quality gate below passes on representative samples |
+| Stage 4: ship tester build | Local onboarding, portable package, cleanup, error handling, settings | Five testers can set up from written instructions; core works with network disconnected |
+| Stage 5: validate paid value | Demo, user interviews, workflow-pack prototype, paid setup pilot | Document willingness to pay, actual purchases, support time, and retention |
 
 Continuous meeting transcription begins only after the desktop loop and retention policy pass. Implement microphone input first, then evaluate a maintained Windows loopback method to capture call audio. Label microphone-only coverage honestly; it may miss remote speakers. Check headphones, separate audio devices, long sessions, and speaking-over-each-other cases. Do not promise speaker attribution until evaluated.
 
@@ -217,4 +217,4 @@ Illustrative arithmetic only: 10 developer-pack purchases at Rs 499 yield Rs 4,9
 | Nobody pays | Offer an actual bounded service to repeat users before developing checkout |
 | Upstream reuse adds more work than it saves | Audit seams and compare a minimal Electron shell before committing |
 
-**Next engineering action:** pin and inspect OpenCluely, then build the smallest local screenshot + spoken-question loop. Defer visual polish, billing, browser extension, and continuous meeting recording until that loop is measured and useful.
+**Next engineering action:** finish the audit of the pinned OpenCluely reference, then build the smallest local screenshot + spoken-question loop. Defer visual polish, billing, browser extension, and continuous meeting recording until that loop is measured and useful.

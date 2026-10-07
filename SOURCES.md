@@ -2,6 +2,8 @@
 
 Checked on 8 October 2026. These links support technical feasibility and licensing observations. Product demand, revenue, hardware targets, and delivery estimates in the plan are hypotheses; they have not been verified by these sources. Upstream branches and model tags are mutable, so pin versions during implementation.
 
+OpenCluely source inspection is now pinned to commit [`0a9da75135f5aade3a067d86a7c8bb73f372f014`](https://github.com/TechyCSR/OpenCluely/tree/0a9da75135f5aade3a067d86a7c8bb73f372f014). The local checkout can differ from web-cached main-branch pages. See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for exact file links and observations.
+
 | Reference | What it establishes |
 | --- | --- |
 | [OpenCluely repository](https://github.com/TechyCSR/OpenCluely) | Public source and existing desktop assistant context |
