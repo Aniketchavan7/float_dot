@@ -262,7 +262,12 @@ function createWindows() {
   panel.on('close', () => { cancel(); quitting = true; app.quit(); });
   panel.loadURL('floatdot://app/index.html');
   dot.loadURL('floatdot://app/index.html#dot');
-  dot.once('ready-to-show', () => { if (!smoke) dot.showInactive(); });
+  dot.once('ready-to-show', () => {
+    if (!smoke) {
+      if (process.argv.includes('--panel')) panel.show();
+      else dot.showInactive();
+    }
+  });
   screen.on('display-removed', () => {
     const area = screen.getPrimaryDisplay().workArea;
     panel.setPosition(area.x + 20, area.y + 20); dot.setPosition(area.x + area.width - 104, area.y + area.height - 124);
