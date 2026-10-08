@@ -19,8 +19,8 @@ async function streamAnswer({ model, messages, signal, onDelta, reasoning = fals
   const response = await fetch(`${ENDPOINT}/api/chat`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.any([signal, timeout]),
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages: requestMessages, stream: true, ...(/^qwen3[:/]/i.test(model) ? { think: reasoning } : {}), keep_alive: '2m',
-      options: { num_ctx: 8192, num_predict: reasoning ? 2048 : 512, temperature: 0.3 } })
+    body: JSON.stringify({ model, messages: requestMessages, stream: true, ...(/^qwen3[:/]/i.test(model) ? { think: reasoning } : {}), keep_alive: '5m',
+      options: { num_ctx: 8192, num_predict: reasoning ? 2048 : 1024, temperature: 0.3 } })
   });
   if (!response.ok) throw new Error(response.status === 404 ? 'The selected model is not downloaded. Run the local setup command.' : `Local inference failed (HTTP ${response.status}).`);
   const reader = response.body.getReader();

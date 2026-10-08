@@ -14,90 +14,202 @@
 <body>
   <button id="floating-dot" aria-label="Open Float Dot"><span class="dot-mark"></span></button>
   <main id="panel">
-    <header class="header">
-      <div class="brand"><span class="brand-dot"></span><span>Float Dot</span></div>
-      <div class="header-actions"><button id="settings-toggle" class="icon-button" aria-label="Show AI settings" title="AI settings">⚙</button><button id="collapse" class="icon-button" aria-label="Collapse to floating dot" title="Collapse">−</button></div>
-    </header>
-    <section class="intro"><p class="eyebrow">YOUR SCREEN, IN CONVERSATION</p><h1>Stay with the problem.</h1><p>Ask aloud. Get a little clarity, right here.</p></section>
-    <div id="status" class="status" role="status" aria-live="polite"><span class="status-light"></span><span id="status-text">Checking local setup…</span></div>
-    <section id="setup" hidden>
-      <div class="section-heading"><h2>AI settings</h2><button id="refresh-status" class="text-button">Check again</button></div>
-      <div id="readiness"></div>
-      <label for="provider">AI provider</label><select id="provider"><option value="ollama">Ollama · local models</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="gemini">Gemini</option><option value="compatible">Other · OpenAI-compatible API</option></select>
-      <label for="model">Model ID</label><input id="model" list="model-options" maxlength="200" placeholder="Enter a model supported by your provider"><datalist id="model-options"></datalist>
-      <div id="endpoint-field" hidden><label for="endpoint">API base URL</label><input id="endpoint" type="url" maxlength="500" placeholder="https://your-provider.example/v1"></div>
-      <div id="key-field" hidden><label for="api-key">API key</label><input id="api-key" type="password" autocomplete="off" maxlength="4096" placeholder="Leave blank to keep saved key"><p id="key-status" class="help"></p><button id="remove-key" class="text-button">Remove saved key</button></div>
-      <label class="check"><input id="send-image" type="checkbox">Send the screenshot image (requires a vision model)</label>
-      <button id="save-provider" class="primary-button">Save AI settings</button>
-      <p id="provider-notice" class="help"></p>
-      <label for="microphone">Microphone</label><select id="microphone"><option value="">System default</option></select>
-      <label for="hotkey">Voice shortcut</label><input id="hotkey" maxlength="80" placeholder="Ctrl+Shift+Space"><button id="save-hotkey" class="text-button">Save shortcut</button>
-      <p class="help">Choose any downloaded Ollama model, or enter your API provider's model ID and key. Local OCR and microphone transcription use the assets installed by <code>npm run setup:local</code>. Image mode can explain screenshots without those assets.</p>
-      <label class="check"><input id="confirm-capture" type="checkbox" checked>Review captures before asking the selected AI</label>
-      <label class="check"><input id="read-aloud" type="checkbox">Read completed answers with a local voice</label>
-      <label class="check"><input id="reasoning" type="checkbox">Slower reasoning compatibility mode</label>
-      <p class="help">Try this if your local Qwen model hits the answer limit in normal mode. It may take up to two minutes; only the final answer is shown.</p>
-      <label for="theme">Appearance</label><select id="theme"><option value="system">Follow system</option><option value="light">Light</option><option value="dark">Dark</option></select>
-    </section>
-    <section class="workspace">
-      <div class="section-heading"><label for="source">Window or display to read</label><button id="refresh-windows" class="text-button">Refresh</button></div>
-      <select id="source"><option value="">Choose a window or display…</option></select>
-      <div class="mode-tabs" role="group" aria-label="Assistant mode"><button data-mode="dsa" aria-pressed="true">DSA hints</button><button data-mode="debug" aria-pressed="false">Debug</button><button data-mode="general" aria-pressed="false">Explain</button><button data-mode="meeting" aria-pressed="false">Meeting</button></div>
-      <div id="window-inputs">
-        <label for="question" class="question-label">What's on your mind?</label>
-        <textarea id="question" rows="2" maxlength="2000" placeholder="Give me one hint, without the solution…"></textarea>
-        <div class="ask-actions"><button id="record" class="record-button"><span class="record-symbol">●</span><span id="record-label">Ask with voice</span></button><button id="capture" class="secondary-button">Read screen</button><button id="stop" class="stop-button" hidden>Stop</button></div>
-        <button id="open-screenshot" class="text-button">Open screenshot…</button>
-        <button id="paste-screenshot" class="text-button">Use clipboard screenshot</button>
-        <p class="shortcut"><strong id="shortcut-label">Ctrl + Shift + Space</strong> <span>to start / stop recording</span></p>
+    <!-- Draggable OpenCluely Titlebar / Tab Header -->
+    <header class="header app-drag-region">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-title">Float Dot</span>
+        <span id="header-model-badge" class="header-badge">qwen3:1.7b</span>
       </div>
-      <div id="meeting-inputs" hidden>
-        <p class="consent-notice">🔒 Participant consent is required. Captures room microphone audio.</p>
-        <div class="meeting-actions">
-          <button id="meeting-record" class="record-button"><span class="record-symbol">●</span><span id="meeting-record-label">Start Meeting</span></button>
-          <button id="meeting-pause" class="secondary-button" hidden>Pause</button>
-          <button id="meeting-stop" class="stop-button" hidden>Finish</button>
+      <div class="header-actions no-drag">
+        <button id="settings-toggle" class="icon-button" aria-label="Show AI settings" title="AI settings">⚙</button>
+        <button id="collapse" class="icon-button" aria-label="Collapse to floating dot" title="Collapse to dot">−</button>
+        <button id="close" class="icon-button close-btn" aria-label="Close" title="Close">✕</button>
+      </div>
+    </header>
+
+    <!-- Compact Floating Body -->
+    <div class="content-scroll">
+      <!-- Status Pill -->
+      <div id="status" class="status-bar" role="status" aria-live="polite">
+        <span class="status-light"></span>
+        <span id="status-text">Checking local setup…</span>
+        <div id="rec-wave" class="rec-wave" hidden>
+          <span></span><span></span><span></span><span></span>
         </div>
-        <div id="meeting-transcript-section" hidden>
-          <div class="section-heading"><label>Live Transcript</label><span id="meeting-timer" class="badge">00:00</span></div>
-          <div id="meeting-transcript-list" class="transcript-box"></div>
-          <div class="meeting-tools">
-            <button id="meeting-summarize" class="primary-button">Summarize Decisions & Actions</button>
-            <button id="meeting-export" class="text-button">Export Notes</button>
-            <button id="meeting-clear" class="text-button">Clear</button>
+      </div>
+
+      <!-- Mode Selector Tabs -->
+      <div class="mode-tabs" role="group" aria-label="Assistant mode">
+        <button data-mode="dsa"><span class="tab-icon">💡</span> DSA hints</button>
+        <button data-mode="debug"><span class="tab-icon">🐞</span> Debug</button>
+        <button data-mode="general"><span class="tab-icon">✨</span> Explain</button>
+        <button data-mode="meeting"><span class="tab-icon">🎙️</span> Meeting</button>
+      </div>
+
+      <!-- Workspace Area -->
+      <section class="workspace">
+        <div id="window-inputs">
+          <!-- Clean Source Bar: Defaults to Entire Screen -->
+          <div class="source-row">
+            <div class="source-picker">
+              <span class="source-icon">🖥️</span>
+              <select id="source" aria-label="Screen or window to read">
+                <option value="screen:default">Entire Screen</option>
+              </select>
+            </div>
+            <button id="refresh-windows" class="icon-btn-pill" title="Refresh available screens and windows">↻</button>
+            <button id="paste-screenshot" class="icon-btn-pill" title="Use image from clipboard">📋 Paste</button>
+            <button id="open-screenshot" class="icon-btn-pill" title="Open screenshot image">📁 File</button>
+          </div>
+
+          <!-- Prompt Box -->
+          <div class="prompt-box">
+            <textarea id="question" rows="2" maxlength="2000" placeholder="Ask about your screen, code, or interview problem…"></textarea>
+            <div class="ask-actions">
+              <button id="record" class="record-button">
+                <span class="record-symbol">●</span>
+                <span id="record-label">Ask with voice</span>
+              </button>
+              <button id="capture" class="secondary-button" title="Capture and explain">
+                <span class="btn-icon">⚡</span>
+                <span id="capture-label">Read screen</span>
+              </button>
+              <button id="stop" class="stop-button" hidden>⏹ Stop</button>
+            </div>
+            <p class="shortcut">
+              <span>Shortcut:</span> <strong id="shortcut-label">Ctrl + Shift + Space</strong>
+              <span class="shortcut-tip">to start / stop voice</span>
+            </p>
           </div>
         </div>
-      </div>
-    </section>
-    <div id="error" class="error" role="alert" hidden></div>
-    <section id="capture-review" hidden>
-      <div class="section-heading"><h2>Captured context</h2><button id="discard" class="text-button">Discard</button></div>
-      <p id="capture-meta" class="help"></p>
-      <img id="preview" alt="Preview of the selected captured window">
-      <details><summary>Crop the next capture</summary>
-        <p class="help">Enter pixel bounds within the dimensions above. Recapture takes a new snapshot of the selected window.</p>
-        <div class="crop-fields">
-          <label>X<input id="crop-x" type="number" min="0" value="0"></label>
-          <label>Y<input id="crop-y" type="number" min="0" value="0"></label>
-          <label>Width<input id="crop-width" type="number" min="10"></label>
-          <label>Height<input id="crop-height" type="number" min="10"></label>
+
+        <!-- Meeting Mode Area -->
+        <div id="meeting-inputs" hidden>
+          <p class="consent-notice">🔒 Participant consent is required. Captures room microphone audio.</p>
+          <div class="meeting-actions">
+            <button id="meeting-record" class="record-button">
+              <span class="record-symbol">●</span>
+              <span id="meeting-record-label">Start Meeting</span>
+            </button>
+            <button id="meeting-pause" class="secondary-button" hidden>Pause</button>
+            <button id="meeting-stop" class="stop-button" hidden>Finish</button>
+          </div>
+          <div id="meeting-transcript-section" hidden>
+            <div class="section-heading"><label>Live Transcript</label><span id="meeting-timer" class="badge">00:00</span></div>
+            <div id="meeting-transcript-list" class="transcript-box"></div>
+            <div class="meeting-tools">
+              <button id="meeting-summarize" class="primary-button">Summarize Decisions & Actions</button>
+              <button id="meeting-export" class="text-button">Export Notes</button>
+              <button id="meeting-clear" class="text-button">Clear</button>
+            </div>
+          </div>
         </div>
-        <button id="crop-capture" class="secondary-button">Recapture selected area</button>
-      </details>
-      <p id="ocr-warning" class="help" hidden></p>
-      <details><summary>See extracted text</summary><pre id="extracted"></pre></details>
-      <button id="confirm" class="primary-button">Answer this question</button>
-    </section>
-    <section id="answer-section" hidden>
-      <button id="answer-stop" class="stop-button" hidden>Stop answer</button>
-      <div class="section-heading"><h2>A little clarity</h2><button id="clear" class="text-button">Clear session</button></div>
-      <p id="answer-meta" class="help"></p>
-      <div id="answer" class="answer" aria-live="off"></div>
-      <div class="answer-actions"><button id="copy" class="text-button">Copy</button><button id="export" class="text-button">Export note</button><button id="speak" class="text-button">Read aloud</button><button id="follow-up" class="text-button">Ask follow-up</button></div>
-      <label class="check"><input id="reuse-capture" type="checkbox" checked>Use this capture for voice follow-ups</label>
-    </section>
-    <section id="empty" class="empty"><div class="empty-mark"><span></span><span></span><span></span></div><h2>One question at a time.</h2><p>A hint for a tricky problem.<br>A next step for a stubborn error.<br>An explanation that finally clicks.</p></section>
-    <footer><span id="processing-location">Choose your AI in settings</span><span>Capture only when you ask</span></footer>
+      </section>
+
+      <!-- Error Banner -->
+      <div id="error" class="error-card" role="alert" hidden></div>
+
+      <!-- Capture Review (Optional/Inspect) -->
+      <section id="capture-review" class="card-drawer" hidden>
+        <div class="section-heading"><h2>Captured preview</h2><button id="discard" class="text-button">Discard</button></div>
+        <p id="capture-meta" class="help"></p>
+        <img id="preview" alt="Preview of the selected captured window">
+        <details>
+          <summary>Crop capture region</summary>
+          <div class="crop-fields">
+            <label>X<input id="crop-x" type="number" min="0" value="0"></label>
+            <label>Y<input id="crop-y" type="number" min="0" value="0"></label>
+            <label>Width<input id="crop-width" type="number" min="10"></label>
+            <label>Height<input id="crop-height" type="number" min="10"></label>
+          </div>
+          <button id="crop-capture" class="secondary-button">Recapture selected area</button>
+        </details>
+        <p id="ocr-warning" class="help" hidden></p>
+        <details><summary>See extracted text</summary><pre id="extracted"></pre></details>
+        <button id="confirm" class="primary-button">Answer this question</button>
+      </section>
+
+      <!-- Answer Section -->
+      <section id="answer-section" class="card-drawer answer-card" hidden>
+        <div class="answer-header">
+          <div class="answer-header-left">
+            <span class="sparkle-icon">✨</span>
+            <h2>Answer</h2>
+          </div>
+          <div class="answer-header-actions">
+            <button id="answer-stop" class="stop-button-compact" hidden>⏹ Stop</button>
+            <button id="clear" class="text-button">Clear</button>
+          </div>
+        </div>
+        <p id="answer-meta" class="help"></p>
+        <div id="answer" class="answer" aria-live="off"></div>
+        <div class="answer-actions">
+          <button id="copy" class="text-btn-pill">📋 Copy</button>
+          <button id="export" class="text-btn-pill">💾 Export note</button>
+          <button id="speak" class="text-btn-pill">🔊 Read aloud</button>
+          <button id="follow-up" class="text-btn-pill">💬 Ask follow-up</button>
+        </div>
+        <label class="check"><input id="reuse-capture" type="checkbox" checked>Keep current screen for follow-ups</label>
+      </section>
+
+      <!-- Empty State -->
+      <section id="empty" class="empty">
+        <div class="empty-mark"><span></span><span></span><span></span></div>
+        <h2>Hovering AI Copilot</h2>
+        <p>Click <strong>Read screen</strong> or press <kbd>Ctrl+Shift+Space</kbd> to ask anything about what's in front of you.</p>
+      </section>
+
+      <!-- Settings Drawer -->
+      <section id="setup" class="card-drawer" hidden>
+        <div class="section-heading"><h2>AI Settings</h2><button id="refresh-status" class="text-button">Check status</button></div>
+        <div id="readiness"></div>
+        <label for="provider">AI provider</label>
+        <select id="provider">
+          <option value="ollama">Ollama · local models</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="gemini">Gemini</option>
+          <option value="compatible">Other · OpenAI-compatible API</option>
+        </select>
+        <label for="model">Model ID</label>
+        <input id="model" list="model-options" maxlength="200" placeholder="e.g. qwen3:1.7b, gpt-4o, claude-3-5-sonnet">
+        <datalist id="model-options"></datalist>
+        <div id="endpoint-field" hidden>
+          <label for="endpoint">API base URL</label>
+          <input id="endpoint" type="url" maxlength="500" placeholder="https://your-provider.example/v1">
+        </div>
+        <div id="key-field" hidden>
+          <label for="api-key">API key</label>
+          <input id="api-key" type="password" autocomplete="off" maxlength="4096" placeholder="Leave blank to keep saved key">
+          <p id="key-status" class="help"></p>
+          <button id="remove-key" class="text-button">Remove saved key</button>
+        </div>
+        <label class="check"><input id="send-image" type="checkbox">Send screenshot image directly (requires vision model)</label>
+        <button id="save-provider" class="primary-button">Save AI settings</button>
+        <p id="provider-notice" class="help"></p>
+        <label for="microphone">Microphone</label>
+        <select id="microphone"><option value="">System default</option></select>
+        <label for="hotkey">Voice shortcut</label>
+        <input id="hotkey" maxlength="80" placeholder="CommandOrControl+Shift+Space">
+        <button id="save-hotkey" class="text-button">Save shortcut</button>
+        <label class="check"><input id="confirm-capture" type="checkbox" checked>Review capture preview before sending</label>
+        <label class="check"><input id="read-aloud" type="checkbox">Read completed answers aloud</label>
+        <label class="check"><input id="reasoning" type="checkbox">Extended reasoning compatibility mode</label>
+        <label for="theme">Appearance</label>
+        <select id="theme">
+          <option value="system">Follow system</option>
+          <option value="dark">Dark glass</option>
+          <option value="light">Light glass</option>
+        </select>
+      </section>
+    </div>
+
+    <!-- Sleek Minimal Footer -->
+    <footer class="app-footer">
+      <span id="processing-location">Ollama · qwen3:1.7b</span>
+      <span>Captures on demand</span>
+    </footer>
   </main>
 </body>
 </html>

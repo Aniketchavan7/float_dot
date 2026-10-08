@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { validateSettings } = require('../shared/validation');
-const DEFAULTS = Object.freeze({ schemaVersion: 2, provider: 'ollama', baseURL: '', sendImage: false, model: 'qwen3:4b', mode: 'general', confirmCapture: true, readAloud: false, reasoning: false, theme: 'system', hotkey: 'CommandOrControl+Shift+Space', microphoneId: '' });
+const DEFAULTS = Object.freeze({ schemaVersion: 2, provider: 'ollama', baseURL: '', sendImage: false, model: 'qwen3:1.7b', mode: 'dsa', confirmCapture: true, readAloud: false, reasoning: false, theme: 'system', hotkey: 'CommandOrControl+Shift+Space', microphoneId: '' });
 async function atomicWrite(targetPath, data) {
   const tmp = `${targetPath}.${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`;
   await fs.mkdir(path.dirname(targetPath), { recursive: true });
@@ -28,7 +28,13 @@ async function atomicWrite(targetPath, data) {
 class SettingsStore {
   constructor(directory) { this.file = path.join(directory, 'settings.json'); this.value = { ...DEFAULTS }; this.queue = Promise.resolve(); }
   async load() {
-    try { this.value = { ...DEFAULTS, ...validateSettings(JSON.parse(await fs.readFile(this.file, 'utf8'))) }; }
+    try {
+      this.value = { ...DEFAULTS, ...validateSettings(JSON.parse(await fs.readFile(this.file, 'utf8'))) };
+      if (this.value.model === 'qwen3:4b') {
+        this.value.model = 'qwen3:1.7b';
+        await atomicWrite(this.file, JSON.stringify(this.value, null, 2)).catch(() => {});
+      }
+    }
     catch (error) { if (error.code !== 'ENOENT') this.recovered = true; }
     return this.value;
   }

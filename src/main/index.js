@@ -28,9 +28,18 @@ let panel, dot, context = null, preparation = null, quitting = false, requestRev
 let tray, registeredHotkey = null, shortcutError = null;
 function registerHotkey(value) {
   if (value === registeredHotkey) return;
-  if (!globalShortcut.register(value, () => { dot.hide(); panel.show(); panel.focus(); panel.webContents.send('fd:hotkey'); })) throw new Error('Shortcut is already in use. Choose another in settings.');
-  if (registeredHotkey) globalShortcut.unregister(registeredHotkey);
-  registeredHotkey = value; shortcutError = null;
+  if (registeredHotkey) {
+    try { globalShortcut.unregister(registeredHotkey); } catch {}
+  }
+  const registered = globalShortcut.register(value, () => {
+    dot.hide(); panel.show(); panel.focus(); panel.webContents.send('fd:hotkey');
+  });
+  if (!registered) {
+    if (!smoke) shortcutError = 'Shortcut is in use by another application. You can customize it in AI settings.';
+    return;
+  }
+  registeredHotkey = value;
+  shortcutError = null;
 }
 const infer = input => {
   const config = { ...settings.value };
@@ -73,6 +82,27 @@ function cancel() {
   meeting.stop();
   if (panel && !panel.isDestroyed()) panel.webContents.send('fd:cancel-recording');
 }
+const IGNORED_WINDOW_NAMES = [
+  /^npm(\.cmd)?\s+start/i,
+  /^nvidia\s+geforce\s+overlay/i,
+  /^geforce\s+overlay/i,
+  /^program\s+manager$/i,
+  /^default\s+ime$/i,
+  /^windows\s+input\s+experience$/i,
+  /^task\s+switching$/i,
+  /^battery\s+flyout$/i,
+  /^network\s+flyout$/i,
+  /^volume\s+flyout$/i,
+  /^clockflyout$/i,
+  /^settings$/i,
+  /^float\s*dot/i
+];
+function isIgnoredWindow(source) {
+  if (!source || !source.name) return true;
+  const trimmed = source.name.trim();
+  if (trimmed.length < 2) return true;
+  return IGNORED_WINDOW_NAMES.some(pattern => pattern.test(trimmed));
+}
 function ownSource(source) {
   return [panel, dot].some(win => {
     if (!win || win.isDestroyed()) return false;
@@ -82,21 +112,30 @@ function ownSource(source) {
   });
 }
 async function capture(sourceId, crop) {
-  text(sourceId, 'Window ID', 160);
-  if (!/^(window|screen):/.test(sourceId)) throw new Error('Choose a window or display.');
+  const isDefaultScreen = !sourceId || sourceId === 'screen:default' || sourceId === 'screen:primary';
+  if (!isDefaultScreen) {
+    text(sourceId, 'Window ID', 160);
+    if (!/^(window|screen):/.test(sourceId)) throw new Error('Choose a window or display.');
+  }
   const wasVisible = panel.isVisible(), dotVisible = dot.isVisible();
-  if (sourceId.startsWith('screen:')) { panel.hide(); dot.hide(); await new Promise(resolve => setTimeout(resolve, 150)); }
+  const willHide = isDefaultScreen || (sourceId && sourceId.startsWith('screen:'));
+  if (willHide) { panel.hide(); dot.hide(); await new Promise(resolve => setTimeout(resolve, 150)); }
   let sources;
-  try { sources = await desktopCapturer.getSources({ types: ['window', 'screen'], thumbnailSize: { width: 2400, height: 1800 } }); }
-  finally { if (sourceId.startsWith('screen:')) { if (wasVisible) panel.show(); else if (dotVisible) dot.showInactive(); } }
-  const source = sources.find(item => item.id === sourceId && !ownSource(item));
-  if (!source || source.thumbnail.isEmpty()) throw new Error('Selected window is unavailable. Open it and choose it again.');
+  try { sources = await desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 2400, height: 1800 } }); }
+  finally { if (willHide) { if (wasVisible) panel.show(); else if (dotVisible) dot.showInactive(); } }
+  let source;
+  if (!isDefaultScreen) {
+    source = sources.find(item => item.id === sourceId && !ownSource(item));
+  } else {
+    source = sources.find(item => item.id.startsWith('screen:') && !ownSource(item)) || sources.find(item => !ownSource(item));
+  }
+  if (!source || source.thumbnail.isEmpty()) throw new Error('Selected screen or window is unavailable.');
   let image = source.thumbnail;
   const bounds = validateCrop(crop, image.getSize());
   if (bounds) image = image.crop(bounds);
   const buffer = image.toPNG();
   if (buffer.length > 20 * 1024 * 1024) throw new Error('Window image is too large. Use a smaller window or crop.');
-  return { buffer, preview: image.resize({ width: 640 }).toDataURL(), dimensions: image.getSize(), name: source.name };
+  return { buffer, preview: image.resize({ width: 640 }).toDataURL(), dimensions: image.getSize(), name: source.name || 'Entire Screen' };
 }
 async function status() {
   let models = [], modelError = null;
@@ -121,9 +160,22 @@ function installIPC() {
     if (typeof input?.key !== 'string') throw new Error('Invalid key input.');
     await credentials.set(settings.value, input.key); return true;
   });
-  handle('fd:windows', async () => (await desktopCapturer.getSources({ types: ['window', 'screen'], thumbnailSize: { width: 0, height: 0 } }))
-    .filter(source => !ownSource(source))
-    .map(source => ({ id: source.id, name: source.name })));
+  handle('fd:windows', async () => {
+    const sources = await desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 0, height: 0 } });
+    const screens = sources.filter(s => s.id.startsWith('screen:') && !ownSource(s));
+    const result = [];
+    if (screens.length > 0) {
+      result.push({ id: screens[0].id, name: 'Entire Screen' });
+      for (let i = 1; i < screens.length; i++) {
+        result.push({ id: screens[i].id, name: `Display ${i + 1}` });
+      }
+    }
+    const windows = sources.filter(s => s.id.startsWith('window:') && !ownSource(s) && !isIgnoredWindow(s));
+    for (const win of windows) {
+      result.push({ id: win.id, name: win.name });
+    }
+    return result;
+  });
   handle('fd:prepare', async input => {
     if (!input || typeof input !== 'object') throw new Error('Invalid capture request.');
     const question = input.audio ? null : text(input.question || 'Explain what is visible in this screenshot.', 'Question');
@@ -193,6 +245,8 @@ function installIPC() {
   });
   handle('fd:collapse', () => { panel.hide(); dot.showInactive(); return true; });
   handle('fd:expand', () => { dot.hide(); panel.show(); return true; });
+  handle('fd:minimize', () => { if (panel && !panel.isDestroyed()) panel.minimize(); return true; });
+  handle('fd:close', () => { cancel(); quitting = true; app.quit(); return true; });
   handle('fd:meeting:start', async input => { coordinator.clear(); return meeting.start(input); });
   handle('fd:meeting:chunk', async input => meeting.addAudioChunk(input?.audio, input?.offsetSec || 0));
   handle('fd:meeting:pause', () => meeting.pause());
@@ -248,10 +302,12 @@ function configureSession() {
 }
 function createWindows() {
   const bounds = screen.getPrimaryDisplay().workArea;
-  panel = new BrowserWindow({ width: 480, height: Math.min(820, bounds.height - 40), minWidth: 400, minHeight: 600,
+  panel = new BrowserWindow({
+    width: 480, height: Math.min(800, bounds.height - 40), minWidth: 380, minHeight: 460,
     x: bounds.x + bounds.width - 500, y: bounds.y + 20, title: 'Float Dot', show: !smoke, alwaysOnTop: true,
-    backgroundColor: '#f5f3ee', autoHideMenuBar: true,
-    webPreferences: { preload: path.join(root, 'src/preload/index.js'), nodeIntegration: false, contextIsolation: true, sandbox: true, backgroundThrottling: false } });
+    frame: false, transparent: true, hasShadow: true, autoHideMenuBar: true,
+    webPreferences: { preload: path.join(root, 'src/preload/index.js'), nodeIntegration: false, contextIsolation: true, sandbox: true, backgroundThrottling: false }
+  });
   dot = new BrowserWindow({ width: 84, height: 84, x: bounds.x + bounds.width - 104, y: bounds.y + bounds.height - 124,
     title: 'Float Dot · voice', frame: false, transparent: true, resizable: false, skipTaskbar: true, alwaysOnTop: true, show: false,
     webPreferences: { preload: path.join(root, 'src/preload/index.js'), nodeIntegration: false, contextIsolation: true, sandbox: true } });

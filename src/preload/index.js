@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld('floatDot', {
   export: value => ipcRenderer.invoke('fd:export', value),
   collapse: () => ipcRenderer.invoke('fd:collapse'),
   expand: () => ipcRenderer.invoke('fd:expand'),
+  close: () => ipcRenderer.invoke('fd:close'),
+  minimize: () => ipcRenderer.invoke('fd:minimize'),
   meetingStart: input => ipcRenderer.invoke('fd:meeting:start', input),
   meetingChunk: input => ipcRenderer.invoke('fd:meeting:chunk', input),
   meetingPause: () => ipcRenderer.invoke('fd:meeting:pause'),
