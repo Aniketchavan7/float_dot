@@ -1,0 +1,282 @@
+[
+  {
+    "id": "dsa-01",
+    "mode": "dsa",
+    "name": "Two Sum",
+    "screenText": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input would have exactly one solution. Example: nums = [2,7,11,15], target = 9.",
+    "spokenQuestion": "Give me one hint without revealing the solution.",
+    "requiredKeywords": ["hash", "map", "complement"],
+    "forbiddenInHint1": ["def twoSum", "function twoSum", "return [", "seen[nums[i]] = i"],
+    "expectedBehavior": "Provides conceptual nudge using complement/hash table without providing full solution code"
+  },
+  {
+    "id": "dsa-02",
+    "mode": "dsa",
+    "name": "Valid Parentheses",
+    "screenText": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. Open brackets must be closed by the same type of brackets in the correct order.",
+    "spokenQuestion": "How should I approach this problem?",
+    "requiredKeywords": ["stack", "last", "match"],
+    "forbiddenInHint1": ["stack.pop() == ", "for char in s:"],
+    "expectedBehavior": "Mentions LIFO stack property without outputting complete solution"
+  },
+  {
+    "id": "dsa-03",
+    "mode": "dsa",
+    "name": "Reverse Linked List",
+    "screenText": "Given the head of a singly linked list, reverse the list, and return the reversed list. class ListNode { val: number; next: ListNode | null; }",
+    "spokenQuestion": "What is the key trick to reverse this iteratively?",
+    "requiredKeywords": ["pointer", "prev", "next"],
+    "forbiddenInHint1": ["curr.next = prev", "while curr:"],
+    "expectedBehavior": "Explains tracking previous and next node pointers"
+  },
+  {
+    "id": "dsa-04",
+    "mode": "dsa",
+    "name": "Best Time to Buy and Sell Stock",
+    "screenText": "You are given an array prices where prices[i] is the price of a given stock on the ith day. Maximize profit by choosing a single day to buy and a different day in the future to sell. Return maximum profit.",
+    "spokenQuestion": "Can I do this in one pass?",
+    "requiredKeywords": ["minimum", "profit", "pass"],
+    "forbiddenInHint1": ["max_profit = max(", "for price in prices:"],
+    "expectedBehavior": "Explains tracking lowest buying price seen so far"
+  },
+  {
+    "id": "dsa-05",
+    "mode": "dsa",
+    "name": "Maximum Subarray",
+    "screenText": "Given an integer array nums, find the subarray with the largest sum, and return its sum. Example: nums = [-2,1,-3,4,-1,2,1,-5,4] Output: 6",
+    "spokenQuestion": "Give me a hint on Kadane's algorithm.",
+    "requiredKeywords": ["running", "current", "sum"],
+    "forbiddenInHint1": ["current_sum = max(", "max_sum = current_sum"],
+    "expectedBehavior": "Explains restarting the subarray when running sum drops below zero"
+  },
+  {
+    "id": "dsa-06",
+    "mode": "dsa",
+    "name": "Binary Search",
+    "screenText": "Given an array of integers nums which is sorted in ascending order, and an integer target, write a function to search target in nums. Return its index or -1.",
+    "spokenQuestion": "Give me one hint.",
+    "requiredKeywords": ["mid", "half", "divide"],
+    "forbiddenInHint1": ["while left <= right:", "mid = (left + right) // 2"],
+    "expectedBehavior": "Explains halving the search space based on midpoint comparison"
+  },
+  {
+    "id": "dsa-07",
+    "mode": "dsa",
+    "name": "Merge Two Sorted Lists",
+    "screenText": "You are given the heads of two sorted linked lists list1 and list2. Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.",
+    "spokenQuestion": "How do I cleanly start the merged list?",
+    "requiredKeywords": ["dummy", "pointer", "compare"],
+    "forbiddenInHint1": ["dummy = ListNode()", "while list1 and list2:"],
+    "expectedBehavior": "Suggests using a dummy head node to avoid edge cases"
+  },
+  {
+    "id": "dsa-08",
+    "mode": "dsa",
+    "name": "Climbing Stairs",
+    "screenText": "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
+    "spokenQuestion": "How does this relate to known sequences?",
+    "requiredKeywords": ["fibonacci", "step", "subproblem"],
+    "forbiddenInHint1": ["dp[i] = dp[i-1] + dp[i-2]"],
+    "expectedBehavior": "Identifies Fibonacci pattern where ways(n) = ways(n-1) + ways(n-2)"
+  },
+  {
+    "id": "dsa-09",
+    "mode": "dsa",
+    "name": "Invert Binary Tree",
+    "screenText": "Given the root of a binary tree, invert the tree, and return its root. Example: [4,2,7,1,3,6,9] becomes [4,7,2,9,6,3,1].",
+    "spokenQuestion": "What is the recursive step?",
+    "requiredKeywords": ["swap", "left", "right"],
+    "forbiddenInHint1": ["root.left, root.right = root.right, root.left"],
+    "expectedBehavior": "Explains swapping left and right child pointers at each node"
+  },
+  {
+    "id": "dsa-10",
+    "mode": "dsa",
+    "name": "Coin Change",
+    "screenText": "You are given an integer array coins representing coins of different denominations and an integer amount. Return the fewest number of coins needed to make up that amount, or -1.",
+    "spokenQuestion": "Is greedy enough, or do I need DP?",
+    "requiredKeywords": ["dynamic", "subproblem", "dp"],
+    "forbiddenInHint1": ["dp[i] = min(", "for coin in coins:"],
+    "expectedBehavior": "Explains why greedy fails on arbitrary denominations and suggests dynamic programming"
+  },
+  {
+    "id": "debug-11",
+    "mode": "debug",
+    "name": "Cannot read properties of undefined",
+    "screenText": "Uncaught TypeError: Cannot read properties of undefined (reading 'map') at UserList.jsx:14:22 at Array.map (<anonymous>) at renderWithHooks (react-dom.development.js:15467)",
+    "spokenQuestion": "Why is this throwing an error on line 14?",
+    "requiredKeywords": ["undefined", "null", "empty"],
+    "expectedBehavior": "Explains the array variable being mapped is undefined prior to data fetching"
+  },
+  {
+    "id": "debug-12",
+    "mode": "debug",
+    "name": "Process is not defined in Vite",
+    "screenText": "Uncaught ReferenceError: process is not defined at index.js:8:5 at config.js:3:16. Using Vite 5 with React.",
+    "spokenQuestion": "Why does process.env break in Vite?",
+    "requiredKeywords": ["vite", "import.meta.env", "browser"],
+    "expectedBehavior": "Identifies Node.js process global missing in browser and suggests import.meta.env"
+  },
+  {
+    "id": "debug-13",
+    "mode": "debug",
+    "name": "ModuleNotFoundError requests",
+    "screenText": "Traceback (most recent call last):\n  File \"app.py\", line 1, in <module>\n    import requests\nModuleNotFoundError: No module named 'requests'",
+    "spokenQuestion": "What command fixes this?",
+    "requiredKeywords": ["pip install", "virtual environment"],
+    "expectedBehavior": "Suggests pip install requests inside active virtual environment"
+  },
+  {
+    "id": "debug-14",
+    "mode": "debug",
+    "name": "CORS Header Missing",
+    "screenText": "Access to fetch at 'http://api.backend.local/data' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "spokenQuestion": "Where does this need to be fixed?",
+    "requiredKeywords": ["server", "cors", "header"],
+    "expectedBehavior": "Clarifies that CORS headers must be added on backend server response"
+  },
+  {
+    "id": "debug-15",
+    "mode": "debug",
+    "name": "Git Merge Conflict Markers",
+    "screenText": "SyntaxError: Unexpected token '<<' in src/utils.js:42\n<<<<<<< HEAD\nconst apiUrl = 'https://prod.api.com';\n=======\nconst apiUrl = 'https://staging.api.com';\n>>>>>>> feature/staging",
+    "spokenQuestion": "What are these <<<<<<< and >>>>>>> symbols?",
+    "requiredKeywords": ["conflict", "merge", "git"],
+    "expectedBehavior": "Explains git merge conflict markers left unresolved in source code"
+  },
+  {
+    "id": "debug-16",
+    "mode": "debug",
+    "name": "Unexpected token < in JSON",
+    "screenText": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON at JSON.parse (<anonymous>) at fetchData (api.js:28)",
+    "spokenQuestion": "Why did JSON.parse receive HTML?",
+    "requiredKeywords": ["html", "404", "response"],
+    "expectedBehavior": "Explains server returned an HTML error page (404/500) instead of expected JSON"
+  },
+  {
+    "id": "debug-17",
+    "mode": "debug",
+    "name": "RecursionError in Python",
+    "screenText": "RecursionError: maximum recursion depth exceeded while calling a Python object at compute_factorial(n-1) in math_ops.py line 7",
+    "spokenQuestion": "What is missing in this recursive function?",
+    "requiredKeywords": ["base case", "termination", "recursion"],
+    "expectedBehavior": "Identifies missing or unreachable base condition causing infinite recursion"
+  },
+  {
+    "id": "debug-18",
+    "mode": "debug",
+    "name": "Node.js Heap Out of Memory",
+    "screenText": "<--- Last few GCs --->\n[14220:0x150008000] FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory",
+    "spokenQuestion": "What caused this crash?",
+    "requiredKeywords": ["memory", "heap", "leak"],
+    "expectedBehavior": "Diagnoses memory exhaustion, infinite loop accumulation, or need for --max-old-space-size"
+  },
+  {
+    "id": "debug-19",
+    "mode": "debug",
+    "name": "Postgres Unique Constraint Violation",
+    "screenText": "error: duplicate key value violates unique constraint \"users_email_key\" DETAIL: Key (email)=(test@example.com) already exists. SQL state: 23505",
+    "spokenQuestion": "What is Postgres telling me here?",
+    "requiredKeywords": ["unique", "duplicate", "email"],
+    "expectedBehavior": "Explains an insert/update attempted to write an email that already exists"
+  },
+  {
+    "id": "debug-20",
+    "mode": "debug",
+    "name": "Docker Port Collision",
+    "screenText": "Error response from daemon: driver failed programming external connectivity on endpoint web-db: Bind for 0.0.0.0:5432 failed: port is already allocated",
+    "spokenQuestion": "Why won't Docker start Postgres?",
+    "requiredKeywords": ["port", "5432", "running"],
+    "expectedBehavior": "Explains host machine already has a process (or another container) bound to port 5432"
+  },
+  {
+    "id": "general-21",
+    "mode": "general",
+    "name": "useEffect Cleanup",
+    "screenText": "useEffect(() => {\n  const handler = () => console.log('resized');\n  window.addEventListener('resize', handler);\n  return () => window.removeEventListener('resize', handler);\n}, []);",
+    "spokenQuestion": "What does the return function inside useEffect do?",
+    "requiredKeywords": ["cleanup", "unmount", "remove"],
+    "expectedBehavior": "Explains that the returned function cleans up subscriptions when component unmounts or before re-running"
+  },
+  {
+    "id": "general-22",
+    "mode": "general",
+    "name": "Promise.all vs allSettled",
+    "screenText": "const results = await Promise.all([p1, p2, p3]);\n// vs\nconst settled = await Promise.allSettled([p1, p2, p3]);",
+    "spokenQuestion": "What is the difference if one promise fails?",
+    "requiredKeywords": ["reject", "fails", "settled"],
+    "expectedBehavior": "Explains Promise.all rejects immediately on first error, whereas allSettled waits for all promises"
+  },
+  {
+    "id": "general-23",
+    "mode": "general",
+    "name": "Python List Comprehension",
+    "screenText": "squares = [x**2 for x in numbers if x % 2 == 0]",
+    "spokenQuestion": "Explain how this list comprehension works.",
+    "requiredKeywords": ["even", "filter", "square"],
+    "expectedBehavior": "Explains filtering even numbers from the list and computing their squares"
+  },
+  {
+    "id": "general-24",
+    "mode": "general",
+    "name": "Rust &str vs String",
+    "screenText": "fn print_slice(text: &str) { ... }\nfn take_owned(text: String) { ... }",
+    "spokenQuestion": "What is the difference between &str and String here?",
+    "requiredKeywords": ["borrow", "owned", "heap"],
+    "expectedBehavior": "Explains String is an owned heap buffer while &str is an immutable borrowed string slice"
+  },
+  {
+    "id": "general-25",
+    "mode": "general",
+    "name": "SQL INNER JOIN vs LEFT JOIN",
+    "screenText": "SELECT u.name, o.id FROM users u INNER JOIN orders o ON u.id = o.user_id;\nSELECT u.name, o.id FROM users u LEFT JOIN orders o ON u.id = o.user_id;",
+    "spokenQuestion": "What happens to users who have placed zero orders?",
+    "requiredKeywords": ["null", "left", "omitted"],
+    "expectedBehavior": "Explains INNER JOIN excludes users without orders, LEFT JOIN keeps them with NULL order fields"
+  },
+  {
+    "id": "general-26",
+    "mode": "general",
+    "name": "CSS justify-content vs align-items",
+    "screenText": ".container {\n  display: flex;\n  flex-direction: row;\n  justify-content: space-between;\n  align-items: center;\n}",
+    "spokenQuestion": "Which one controls horizontal spacing here?",
+    "requiredKeywords": ["main", "justify-content", "horizontal"],
+    "expectedBehavior": "Clarifies justify-content controls main axis (horizontal in row), align-items controls cross axis"
+  },
+  {
+    "id": "general-27",
+    "mode": "general",
+    "name": "TypeScript Record<K, T>",
+    "screenText": "type UserRole = 'admin' | 'editor' | 'viewer';\ntype Permissions = Record<UserRole, string[]>;",
+    "spokenQuestion": "What type does Permissions represent?",
+    "requiredKeywords": ["object", "key", "property"],
+    "expectedBehavior": "Explains an object map where each UserRole is a key with a string array value"
+  },
+  {
+    "id": "general-28",
+    "mode": "general",
+    "name": "Node.js Event Loop Microtasks",
+    "screenText": "setTimeout(() => console.log('timeout'), 0);\nPromise.resolve().then(() => console.log('promise'));\nprocess.nextTick(() => console.log('nextTick'));",
+    "spokenQuestion": "Which log statement prints first?",
+    "requiredKeywords": ["nextTick", "microtask", "before"],
+    "expectedBehavior": "Explains process.nextTick executes before promise microtasks and setTimeout timers"
+  },
+  {
+    "id": "general-29",
+    "mode": "general",
+    "name": "Git rebase vs merge",
+    "screenText": "$ git merge feature\n# vs\n$ git rebase main",
+    "spokenQuestion": "What does rebase do to the commit history?",
+    "requiredKeywords": ["linear", "replay", "history"],
+    "expectedBehavior": "Explains rebase replays commits on top of the target branch creating a linear history"
+  },
+  {
+    "id": "general-30",
+    "mode": "general",
+    "name": "HTTP 401 vs 403",
+    "screenText": "HTTP/1.1 401 Unauthorized\nHTTP/1.1 403 Forbidden",
+    "spokenQuestion": "What is the practical difference between 401 and 403?",
+    "requiredKeywords": ["authentication", "authorization", "credentials"],
+    "expectedBehavior": "Explains 401 means unauthenticated (missing/invalid login), 403 means authenticated but not permitted"
+  }
+]

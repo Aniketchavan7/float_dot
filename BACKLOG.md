@@ -1,6 +1,6 @@
 # Float Dot implementation backlog
 
-Application implementation is unstarted. FD-001 has a pinned reference checkout and source triage complete; the full audit remains open. Order is dependency-driven. P0 builds the core; P1 completes tester readiness; P2 expands only after evidence supports it. See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for the current estimate.
+The first application prototype is implemented. FD-002 through FD-013 have varying partial implementation, but their full acceptance gates are not complete; unchecked tasks remain open. See [BUILD_STATUS.md](BUILD_STATUS.md) for actual test results and blockers. FD-001 has a pinned reference checkout and source triage complete; the full audit remains open. Order is dependency-driven. P0 builds the core; P1 completes tester readiness; P2 expands only after evidence supports it. See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for the current estimate.
 
 ## P0: prove and build the core
 

@@ -1,8 +1,10 @@
 # Float Dot — Product Requirements Document
 
-Version: 1.1 · Date: 8 October 2026 · Owner: Aniket · Stage: pre-implementation
+Version: 1.2 · Date: 8 October 2026 · Owner: Aniket · Stage: initial prototype
 
 This PRD defines the proposed product and acceptance criteria. It is not a description of an implemented application. It is authoritative for product requirements; [PLAN.md](PLAN.md) provides the execution/revenue plan and [BACKLOG.md](BACKLOG.md) tracks implementation tasks. Version numbers and model digests will be pinned during the technical spike.
+
+Implementation progress and verified limitations are tracked in [BUILD_STATUS.md](BUILD_STATUS.md). The initial OCR implementation uses local Tesseract.js WebAssembly with tessdata_fast rather than a separately installed native Tesseract executable. The intended local processing boundary is unchanged; quality/performance gates remain open.
 
 ## 1. Product summary
 

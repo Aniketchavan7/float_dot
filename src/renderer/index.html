@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; media-src blob:; base-uri 'none'; form-action 'none'">
+  <title>Float Dot</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/marked.js" defer></script>
+  <script src="vendor/purify.js" defer></script>
+  <script src="vendor/prism.js" defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <button id="floating-dot" aria-label="Open Float Dot"><span class="dot-mark"></span></button>
+  <main id="panel">
+    <header class="header">
+      <div class="brand"><span class="brand-dot"></span><span>Float Dot</span></div>
+      <div class="header-actions"><button id="settings-toggle" class="icon-button" aria-label="Show local setup" title="Local setup">⚙</button><button id="collapse" class="icon-button" aria-label="Collapse to floating dot" title="Collapse">−</button></div>
+    </header>
+    <section class="intro"><p class="eyebrow">YOUR SCREEN, IN CONVERSATION</p><h1>Stay with the problem.</h1><p>Ask aloud. Get a little clarity, right here.</p></section>
+    <div id="status" class="status" role="status" aria-live="polite"><span class="status-light"></span><span id="status-text">Checking local setup…</span></div>
+    <section id="setup" hidden>
+      <div class="section-heading"><h2>Local setup</h2><button id="refresh-status" class="text-button">Check again</button></div>
+      <div id="readiness"></div>
+      <label for="model">Downloaded model</label><select id="model"><option value="qwen3:4b">Qwen3 4B</option></select>
+      <p class="help">First time? In the project terminal run <code>npm run setup:local</code>, then start Ollama with cloud disabled and download <code>qwen3:4b</code>. See the README.</p>
+      <p class="help">Local mode uses a downloaded model. Offline behavior is checked separately; the app does not claim verification merely because a server is on localhost.</p>
+      <label class="check"><input id="confirm-capture" type="checkbox" checked>Review captures before sending to the local model</label>
+      <label class="check"><input id="read-aloud" type="checkbox">Read completed answers with a local voice</label>
+      <label for="theme">Appearance</label><select id="theme"><option value="system">Follow system</option><option value="light">Light</option><option value="dark">Dark</option></select>
+    </section>
+    <section class="workspace">
+      <div class="section-heading"><label for="source">Look at this window</label><button id="refresh-windows" class="text-button">Refresh</button></div>
+      <select id="source"><option value="">Choose a window…</option></select>
+      <div class="mode-tabs" role="group" aria-label="Assistant mode"><button data-mode="dsa" aria-pressed="true">DSA hints</button><button data-mode="debug" aria-pressed="false">Debug</button><button data-mode="general" aria-pressed="false">Explain</button><button data-mode="meeting" aria-pressed="false">Meeting</button></div>
+      <div id="window-inputs">
+        <label for="question" class="question-label">What's on your mind?</label>
+        <textarea id="question" rows="2" maxlength="2000" placeholder="Give me one hint, without the solution…"></textarea>
+        <div class="ask-actions"><button id="record" class="record-button"><span class="record-symbol">●</span><span id="record-label">Ask with voice</span></button><button id="capture" class="secondary-button">Read screen</button><button id="stop" class="stop-button" hidden>Stop</button></div>
+        <p class="shortcut">Ctrl + Shift + Space <span>to start / stop recording</span></p>
+      </div>
+      <div id="meeting-inputs" hidden>
+        <p class="consent-notice">🔒 Participant consent is required. Captures room microphone audio.</p>
+        <div class="meeting-actions">
+          <button id="meeting-record" class="record-button"><span class="record-symbol">●</span><span id="meeting-record-label">Start Meeting</span></button>
+          <button id="meeting-pause" class="secondary-button" hidden>Pause</button>
+          <button id="meeting-stop" class="stop-button" hidden>Finish</button>
+        </div>
+        <div id="meeting-transcript-section" hidden>
+          <div class="section-heading"><label>Live Transcript</label><span id="meeting-timer" class="badge">00:00</span></div>
+          <div id="meeting-transcript-list" class="transcript-box"></div>
+          <div class="meeting-tools">
+            <button id="meeting-summarize" class="primary-button">Summarize Decisions & Actions</button>
+            <button id="meeting-export" class="text-button">Export Notes</button>
+            <button id="meeting-clear" class="text-button">Clear</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div id="error" class="error" role="alert" hidden></div>
+    <section id="capture-review" hidden>
+      <div class="section-heading"><h2>Captured context</h2><button id="discard" class="text-button">Discard</button></div>
+      <p id="capture-meta" class="help"></p>
+      <img id="preview" alt="Preview of the selected captured window">
+      <p id="ocr-warning" class="help" hidden></p>
+      <details><summary>See extracted text</summary><pre id="extracted"></pre></details>
+      <button id="confirm" class="primary-button">Answer this question</button>
+    </section>
+    <section id="answer-section" hidden>
+      <div class="section-heading"><h2>A little clarity</h2><button id="clear" class="text-button">Clear session</button></div>
+      <p id="answer-meta" class="help"></p>
+      <div id="answer" class="answer" aria-live="off"></div>
+      <div class="answer-actions"><button id="copy" class="text-button">Copy</button><button id="export" class="text-button">Export note</button><button id="speak" class="text-button">Read aloud</button><button id="follow-up" class="text-button">Ask follow-up</button></div>
+      <label class="check"><input id="reuse-capture" type="checkbox" checked>Use this capture for voice follow-ups</label>
+    </section>
+    <section id="empty" class="empty"><div class="empty-mark"><span></span><span></span><span></span></div><h2>One question at a time.</h2><p>A hint for a tricky problem.<br>A next step for a stubborn error.<br>An explanation that finally clicks.</p></section>
+    <footer><span>Processed on your computer</span><span>Capture only when you ask</span></footer>
+  </main>
+</body>
+</html>
