@@ -10,9 +10,9 @@ const { buildMessages } = require('../src/services/prompts');
 const { streamAnswer, listModels } = require('../src/services/model');
 const context = { id: 'capture-one', text: 'const nums = [2, 7, 11]; target = 9;', capturedAt: '2026-10-08T00:00:00Z' };
 
-test('input boundaries reject crop expansion, cloud model, and forged WAV', () => {
+test('input boundaries reject crop expansion, invalid provider, and forged WAV', () => {
   assert.throws(() => validateCrop({ x: 80, y: 0, width: 50, height: 20 }, { width: 100, height: 100 }));
-  assert.throws(() => validateSettings({ model: 'qwen3:4b-cloud' }));
+  assert.throws(() => validateSettings({ provider: 'unknown' }));
   assert.throws(() => validateSettings({ confirmCapture: 'false' }));
   assert.throws(() => validateAudio(Buffer.alloc(500)));
   assert.deepEqual(validateCrop({ x: 0, y: 10, width: 50, height: 20 }, { width: 100, height: 100 }), { x: 0, y: 10, width: 50, height: 20 });
@@ -84,10 +84,42 @@ test('stream parsing handles split UTF-8/chunks and requires completion', async 
     await assert.rejects(streamAnswer({ model: 'qwen3:4b', messages: [], signal: new AbortController().signal, onDelta: () => {} }), /incomplete/);
   } finally { global.fetch = original; }
 });
-test('only approved downloaded local model tags are offered', async () => {
+test('Ollama offers downloaded models from any family while excluding remote models', async () => {
   const original = global.fetch;
   try {
     global.fetch = async () => Response.json({ models: [{ name: 'qwen3:4b' }, { name: 'qwen3:4b-cloud' }, { name: 'qwen3:8b', remote_host: 'cloud' }, { name: 'other:latest' }] });
-    assert.deepEqual((await listModels()).map(model => model.name), ['qwen3:4b']);
+    assert.deepEqual((await listModels()).map(model => model.name), ['qwen3:4b', 'other:latest']);
   } finally { global.fetch = original; }
+});
+
+test('token-limited model responses fail instead of being accepted as completed answers', async () => {
+  const originalFetch = global.fetch;
+  try {
+    global.fetch = async () => new Response(JSON.stringify({ message: { content: 'unfinished' }, done: true, done_reason: 'length' }) + '\n');
+    await assert.rejects(streamAnswer({ model: 'qwen3:4b', messages: [], signal: new AbortController().signal, onDelta: () => {} }), /output limit/);
+    await assert.rejects(streamAnswer({ model: '', messages: [], signal: new AbortController().signal, onDelta: () => {} }), /Model ID/);
+  } finally { global.fetch = originalFetch; }
+});
+
+test('reasoning compatibility is explicit and only final answer content is emitted', async () => {
+  const originalFetch = global.fetch;
+  try {
+    let payload;
+    global.fetch = async (_url, options) => {
+      payload = JSON.parse(options.body);
+      return new Response([
+        { message: { thinking: 'private internal tokens' }, done: false },
+        { message: { content: 'A concise hint.' }, done: true, done_reason: 'stop' }
+      ].map(value => JSON.stringify(value)).join('\n'));
+    };
+    let shown = '';
+    const answer = await streamAnswer({ model: 'qwen3:4b', messages: [{ role: 'user', content: 'One hint' }], reasoning: true,
+      signal: new AbortController().signal, onDelta: delta => { shown += delta; } });
+    assert.equal(payload.think, true);
+    assert.equal(payload.options.num_predict, 2048);
+    assert.equal(answer, 'A concise hint.');
+    assert.equal(shown, answer);
+    assert.equal(validateSettings({ reasoning: true }).reasoning, true);
+    assert.throws(() => validateSettings({ reasoning: 'true' }));
+  } finally { global.fetch = originalFetch; }
 });

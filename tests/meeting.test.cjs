@@ -136,3 +136,73 @@ test('MeetingService summarize enforces structured sections and timestamped cita
   assert.match(promptSent[0].content, /NEVER invent owners, deadlines/);
   assert.match(promptSent[1].content, /\[00:10\] Approved release for tomorrow\./);
 });
+
+async function audioModule() {
+  const source = await fs.readFile(path.join(__dirname, '../src/renderer/audio.js'), 'utf8');
+  return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+}
+
+test('stopping meetings keeps transcript and canceled summaries cannot emit stale output', async () => {
+  const events = []; let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const meeting = new MeetingService({ speech: {}, emit: (channel, data) => events.push({ channel, data }),
+    infer: async ({ onDelta }) => { await gate; onDelta('stale'); return 'stale'; } });
+  meeting.start();
+  meeting.session.segments.push({ id: 'one', timestamp: '00:00', text: 'Keep this decision.' });
+  const summary = meeting.summarize();
+  await new Promise(resolve => setImmediate(resolve));
+  meeting.cancelSummary(); meeting.stop(); release(); await summary;
+  assert.match(meeting.getTranscriptText(), /Keep this decision/);
+  assert.equal(events.filter(e => /summary-(delta|done)/.test(e.channel)).length, 0);
+});
+
+test('meeting summary drains accepted audio and rejects fabricated source/timestamps', async () => {
+  const { encodeWav } = await audioModule();
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  let messages;
+  const meeting = new MeetingService({ speech: { transcribeSegment: async () => { await gate; return 'Approved Friday release.'; } },
+    infer: async input => { messages = input.messages; return 'Notes'; } });
+  assert.throws(() => meeting.start({ audioSource: 'loopback' }), /microphone/);
+  meeting.start();
+  const wav = encodeWav([new Float32Array(16000).fill(0.1)], 16000);
+  await assert.rejects(meeting.addAudioChunk(wav, Infinity), /timestamp/);
+  const chunk = meeting.addAudioChunk(wav, 0);
+  meeting.stop();
+  const summary = meeting.summarize();
+  release(); await chunk; await summary;
+  assert.match(messages[1].content, /Approved Friday release/);
+});
+
+test('meeting stop releases microphone before transcription finishes and timestamps chunk start', async () => {
+  const { MeetingRecorder } = await audioModule();
+  let release, stopped = false, offset;
+  const gate = new Promise(resolve => { release = resolve; });
+  const recorder = new MeetingRecorder({ onChunk: async (wav, at) => { offset = at; await gate; } });
+  recorder.active = true; recorder.rate = 16000;
+  recorder.startTime = Date.now() - 10000; recorder.chunkStart = recorder.startTime;
+  recorder.chunks = [new Float32Array(16000).fill(0.1)];
+  recorder.stream = { getTracks: () => [{ stop: () => { stopped = true; } }] };
+  const stopping = recorder.stop();
+  assert.equal(stopped, true);
+  assert.equal(recorder.active, false);
+  assert.equal(offset, 0);
+  release(); await stopping;
+});
+
+test('shortcut and microphone preferences validate and persist supported values', () => {
+  assert.deepEqual(validateSettings({ hotkey: 'Ctrl+Alt+F8', microphoneId: 'device-one' }), { hotkey: 'Ctrl+Alt+F8', microphoneId: 'device-one' });
+  assert.throws(() => validateSettings({ hotkey: 'bad accelerator' }));
+  assert.throws(() => validateSettings({ microphoneId: {} }));
+});
+
+test('canceling a summary while queued transcription drains does not start inference', async () => {
+  let release, called = false;
+  const meeting = new MeetingService({ speech: {}, infer: async () => { called = true; } });
+  meeting.start();
+  meeting.queue = new Promise(resolve => { release = resolve; });
+  const pending = meeting.summarize();
+  meeting.cancelSummary(); release();
+  await assert.rejects(pending, /canceled/);
+  assert.equal(called, false);
+});

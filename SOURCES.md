@@ -34,3 +34,13 @@ OpenCluely source inspection is now pinned to commit [`0a9da75135f5aade3a067d86a
 - Verify local-only mode through network observation and disconnected operation.
 - Check current distribution and payment terms before selecting a public release or sales platform.
 - Measure on actual target hardware; model download size alone does not establish required RAM or speed.
+
+## Provider integration update (8 October 2026)
+
+- [OpenAI Responses streaming](https://developers.openai.com/api/docs/guides/streaming-responses)
+- [OpenAI image inputs](https://developers.openai.com/api/docs/guides/images-vision)
+- [Anthropic streaming](https://platform.claude.com/docs/en/build-with-claude/streaming)
+- [Anthropic image inputs](https://platform.claude.com/docs/en/build-with-claude/vision)
+- [Gemini Generate Content](https://ai.google.dev/api/generate-content)
+
+These establish adapter request/event formats, not live account availability or verified model quality.

@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { validateSettings } = require('../shared/validation');
-const DEFAULTS = Object.freeze({ schemaVersion: 1, model: 'qwen3:4b', mode: 'dsa', confirmCapture: true, readAloud: false, theme: 'system' });
+const DEFAULTS = Object.freeze({ schemaVersion: 2, provider: 'ollama', baseURL: '', sendImage: false, model: 'qwen3:4b', mode: 'general', confirmCapture: true, readAloud: false, reasoning: false, theme: 'system', hotkey: 'CommandOrControl+Shift+Space', microphoneId: '' });
 class SettingsStore {
   constructor(directory) { this.file = path.join(directory, 'settings.json'); this.value = { ...DEFAULTS }; this.queue = Promise.resolve(); }
   async load() {

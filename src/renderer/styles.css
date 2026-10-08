@@ -12,3 +12,8 @@
 .transcript-box{background:var(--surface);border:1px solid var(--line);border-radius:8px;max-height:220px;overflow-y:auto;margin:10px 0}
 .badge{background:var(--accent-bg);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:10px;font-family:Consolas,monospace;font-weight:600}
 .meeting-tools{display:flex;gap:10px;align-items:center;margin-top:10px}
+
+.crop-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.crop-fields input{display:block;width:100%;padding:6px;color:var(--ink);background:var(--surface);border:1px solid var(--line)}
+
+#setup input:not([type=checkbox]){width:100%;border:1px solid var(--line);border-radius:7px;padding:10px;background:var(--surface);color:var(--ink)}#endpoint-field label,#key-field label{display:block;font-size:11px;margin:10px 0 7px}#paste-screenshot{margin-left:16px}footer{gap:12px}#processing-location{overflow-wrap:anywhere}
+

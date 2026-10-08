@@ -18,7 +18,7 @@ class Coordinator {
     this.active = job;
     this.emit({ type: 'started', requestId: job.id, capturedAt: context.capturedAt });
     try {
-      const answer = await this.infer({ model, signal: job.controller.signal,
+      const answer = await this.infer({ model, image: context.image, signal: job.controller.signal,
         messages: buildMessages({ question, mode, context, history: this.history, hintLevel: this.hintLevel }),
         onDelta: delta => { if (this.active === job) this.emit({ type: 'delta', requestId: job.id, delta }); }
       });

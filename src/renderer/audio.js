@@ -19,10 +19,10 @@ export function encodeWav(chunks, inputRate) {
 }
 export class Recorder {
   constructor(onLimit) { this.onLimit = onLimit; this.active = false; this.generation = 0; }
-  async start() {
+  async start(deviceId = '') {
     const generation = ++this.generation;
     this.chunks = [];
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true }, video: false });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { ...(deviceId ? { deviceId: { exact: deviceId } } : {}), channelCount: 1, echoCancellation: true, noiseSuppression: true }, video: false });
     if (generation !== this.generation) { stream.getTracks().forEach(track => track.stop()); return; }
     this.stream = stream;
     try {
@@ -34,7 +34,9 @@ export class Recorder {
       this.source = this.context.createMediaStreamSource(stream);
       this.gain = this.context.createGain(); this.gain.gain.value = 0;
       this.source.connect(this.node); this.node.connect(this.gain); this.gain.connect(this.context.destination);
-      await this.context.resume(); this.active = true;
+      await this.context.resume();
+      if (generation !== this.generation) return;
+      this.active = true;
       this.timer = setTimeout(() => this.onLimit(), 30000);
     } catch (error) { this.cancel(); throw error; }
   }
@@ -65,12 +67,13 @@ export class MeetingRecorder {
     this.paused = false;
     this.generation = 0;
     this.startTime = 0;
+    this.pending = new Set();
   }
-  async start() {
+  async start(deviceId = '') {
     const generation = ++this.generation;
     this.chunks = [];
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      audio: { ...(deviceId ? { deviceId: { exact: deviceId } } : {}), channelCount: 1, echoCancellation: true, noiseSuppression: true },
       video: false
     });
     if (generation !== this.generation) { stream.getTracks().forEach(t => t.stop()); return; }
@@ -91,39 +94,46 @@ export class MeetingRecorder {
       this.node.connect(this.gain);
       this.gain.connect(this.context.destination);
       await this.context.resume();
+      if (generation !== this.generation) return;
       this.active = true;
       this.paused = false;
       this.startTime = Date.now();
+      this.chunkStart = this.startTime;
       this._scheduleNextFlush();
     } catch (err) { this.cancel(); throw err; }
   }
   _scheduleNextFlush() {
     clearTimeout(this.intervalTimer);
     if (!this.active) return;
-    this.intervalTimer = setTimeout(async () => {
-      if (this.active && !this.paused) await this.flushChunk();
+    this.intervalTimer = setTimeout(() => {
+      if (this.active && !this.paused) void this.flushChunk();
       this._scheduleNextFlush();
     }, this.intervalMs);
   }
   async flushChunk() {
     const slice = this.chunks || [];
     this.chunks = [];
+    const offsetSec = Math.max(0, (this.chunkStart - this.startTime) / 1000);
+    this.chunkStart = Date.now();
     if (!slice.length) return;
     let energy = 0, samples = 0;
     for (const chunk of slice) for (const value of chunk) { energy += value * value; samples++; }
     if (samples < this.rate / 4 || Math.sqrt(energy / samples) < 0.0005) return;
-    const elapsedSec = Math.floor((Date.now() - this.startTime) / 1000);
     const wav = encodeWav(slice, this.rate);
-    try { await this.onChunk(wav, elapsedSec); }
-    catch (err) { console.warn('Chunk processing error:', err); }
+    const job = Promise.resolve(this.onChunk(wav, offsetSec));
+    this.pending.add(job);
+    try { await job; }
+    finally { this.pending.delete(job); }
   }
-  pause() { this.paused = true; }
-  resume() { this.paused = false; }
+  async pause() { this.paused = true; await this.flushChunk(); }
+  resume() { this.chunkStart = Date.now(); this.paused = false; }
   async stop() {
     this.active = false;
     clearTimeout(this.intervalTimer);
-    await this.flushChunk();
+    const finalChunk = this.flushChunk();
+    const pending = [...this.pending, finalChunk];
     this.cancel();
+    await Promise.all(pending);
   }
   cancel() {
     ++this.generation;

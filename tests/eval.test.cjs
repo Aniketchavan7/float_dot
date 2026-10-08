@@ -25,7 +25,7 @@ test('evaluation corpus contains 30 valid cases with 10 in each mode', () => {
   }
 });
 
-test('DSA evaluation cases configure hintLevel=0 without full solution leaks', () => {
+test('DSA evaluation cases include first-hint prompt constraints', () => {
   const dsaCases = corpus.filter(c => c.mode === 'dsa');
   for (const c of dsaCases) {
     const messages = buildMessages({
@@ -42,7 +42,7 @@ test('DSA evaluation cases configure hintLevel=0 without full solution leaks', (
   }
 });
 
-test('Debug evaluation cases enforce structured root-cause analysis', () => {
+test('Debug evaluation cases include structured-analysis prompt instructions', () => {
   const debugCases = corpus.filter(c => c.mode === 'debug');
   for (const c of debugCases) {
     const messages = buildMessages({

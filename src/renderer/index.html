@@ -16,29 +16,40 @@
   <main id="panel">
     <header class="header">
       <div class="brand"><span class="brand-dot"></span><span>Float Dot</span></div>
-      <div class="header-actions"><button id="settings-toggle" class="icon-button" aria-label="Show local setup" title="Local setup">⚙</button><button id="collapse" class="icon-button" aria-label="Collapse to floating dot" title="Collapse">−</button></div>
+      <div class="header-actions"><button id="settings-toggle" class="icon-button" aria-label="Show AI settings" title="AI settings">⚙</button><button id="collapse" class="icon-button" aria-label="Collapse to floating dot" title="Collapse">−</button></div>
     </header>
     <section class="intro"><p class="eyebrow">YOUR SCREEN, IN CONVERSATION</p><h1>Stay with the problem.</h1><p>Ask aloud. Get a little clarity, right here.</p></section>
     <div id="status" class="status" role="status" aria-live="polite"><span class="status-light"></span><span id="status-text">Checking local setup…</span></div>
     <section id="setup" hidden>
-      <div class="section-heading"><h2>Local setup</h2><button id="refresh-status" class="text-button">Check again</button></div>
+      <div class="section-heading"><h2>AI settings</h2><button id="refresh-status" class="text-button">Check again</button></div>
       <div id="readiness"></div>
-      <label for="model">Downloaded model</label><select id="model"><option value="qwen3:4b">Qwen3 4B</option></select>
-      <p class="help">First time? In the project terminal run <code>npm run setup:local</code>, then start Ollama with cloud disabled and download <code>qwen3:4b</code>. See the README.</p>
-      <p class="help">Local mode uses a downloaded model. Offline behavior is checked separately; the app does not claim verification merely because a server is on localhost.</p>
-      <label class="check"><input id="confirm-capture" type="checkbox" checked>Review captures before sending to the local model</label>
+      <label for="provider">AI provider</label><select id="provider"><option value="ollama">Ollama · local models</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="gemini">Gemini</option><option value="compatible">Other · OpenAI-compatible API</option></select>
+      <label for="model">Model ID</label><input id="model" list="model-options" maxlength="200" placeholder="Enter a model supported by your provider"><datalist id="model-options"></datalist>
+      <div id="endpoint-field" hidden><label for="endpoint">API base URL</label><input id="endpoint" type="url" maxlength="500" placeholder="https://your-provider.example/v1"></div>
+      <div id="key-field" hidden><label for="api-key">API key</label><input id="api-key" type="password" autocomplete="off" maxlength="4096" placeholder="Leave blank to keep saved key"><p id="key-status" class="help"></p><button id="remove-key" class="text-button">Remove saved key</button></div>
+      <label class="check"><input id="send-image" type="checkbox">Send the screenshot image (requires a vision model)</label>
+      <button id="save-provider" class="primary-button">Save AI settings</button>
+      <p id="provider-notice" class="help"></p>
+      <label for="microphone">Microphone</label><select id="microphone"><option value="">System default</option></select>
+      <label for="hotkey">Voice shortcut</label><input id="hotkey" maxlength="80" placeholder="Ctrl+Shift+Space"><button id="save-hotkey" class="text-button">Save shortcut</button>
+      <p class="help">Choose any downloaded Ollama model, or enter your API provider's model ID and key. Local OCR and microphone transcription use the assets installed by <code>npm run setup:local</code>. Image mode can explain screenshots without those assets.</p>
+      <label class="check"><input id="confirm-capture" type="checkbox" checked>Review captures before asking the selected AI</label>
       <label class="check"><input id="read-aloud" type="checkbox">Read completed answers with a local voice</label>
+      <label class="check"><input id="reasoning" type="checkbox">Slower reasoning compatibility mode</label>
+      <p class="help">Try this if your local Qwen model hits the answer limit in normal mode. It may take up to two minutes; only the final answer is shown.</p>
       <label for="theme">Appearance</label><select id="theme"><option value="system">Follow system</option><option value="light">Light</option><option value="dark">Dark</option></select>
     </section>
     <section class="workspace">
-      <div class="section-heading"><label for="source">Look at this window</label><button id="refresh-windows" class="text-button">Refresh</button></div>
-      <select id="source"><option value="">Choose a window…</option></select>
+      <div class="section-heading"><label for="source">Window or display to read</label><button id="refresh-windows" class="text-button">Refresh</button></div>
+      <select id="source"><option value="">Choose a window or display…</option></select>
       <div class="mode-tabs" role="group" aria-label="Assistant mode"><button data-mode="dsa" aria-pressed="true">DSA hints</button><button data-mode="debug" aria-pressed="false">Debug</button><button data-mode="general" aria-pressed="false">Explain</button><button data-mode="meeting" aria-pressed="false">Meeting</button></div>
       <div id="window-inputs">
         <label for="question" class="question-label">What's on your mind?</label>
         <textarea id="question" rows="2" maxlength="2000" placeholder="Give me one hint, without the solution…"></textarea>
         <div class="ask-actions"><button id="record" class="record-button"><span class="record-symbol">●</span><span id="record-label">Ask with voice</span></button><button id="capture" class="secondary-button">Read screen</button><button id="stop" class="stop-button" hidden>Stop</button></div>
-        <p class="shortcut">Ctrl + Shift + Space <span>to start / stop recording</span></p>
+        <button id="open-screenshot" class="text-button">Open screenshot…</button>
+        <button id="paste-screenshot" class="text-button">Use clipboard screenshot</button>
+        <p class="shortcut"><strong id="shortcut-label">Ctrl + Shift + Space</strong> <span>to start / stop recording</span></p>
       </div>
       <div id="meeting-inputs" hidden>
         <p class="consent-notice">🔒 Participant consent is required. Captures room microphone audio.</p>
@@ -63,11 +74,22 @@
       <div class="section-heading"><h2>Captured context</h2><button id="discard" class="text-button">Discard</button></div>
       <p id="capture-meta" class="help"></p>
       <img id="preview" alt="Preview of the selected captured window">
+      <details><summary>Crop the next capture</summary>
+        <p class="help">Enter pixel bounds within the dimensions above. Recapture takes a new snapshot of the selected window.</p>
+        <div class="crop-fields">
+          <label>X<input id="crop-x" type="number" min="0" value="0"></label>
+          <label>Y<input id="crop-y" type="number" min="0" value="0"></label>
+          <label>Width<input id="crop-width" type="number" min="10"></label>
+          <label>Height<input id="crop-height" type="number" min="10"></label>
+        </div>
+        <button id="crop-capture" class="secondary-button">Recapture selected area</button>
+      </details>
       <p id="ocr-warning" class="help" hidden></p>
       <details><summary>See extracted text</summary><pre id="extracted"></pre></details>
       <button id="confirm" class="primary-button">Answer this question</button>
     </section>
     <section id="answer-section" hidden>
+      <button id="answer-stop" class="stop-button" hidden>Stop answer</button>
       <div class="section-heading"><h2>A little clarity</h2><button id="clear" class="text-button">Clear session</button></div>
       <p id="answer-meta" class="help"></p>
       <div id="answer" class="answer" aria-live="off"></div>
@@ -75,7 +97,7 @@
       <label class="check"><input id="reuse-capture" type="checkbox" checked>Use this capture for voice follow-ups</label>
     </section>
     <section id="empty" class="empty"><div class="empty-mark"><span></span><span></span><span></span></div><h2>One question at a time.</h2><p>A hint for a tricky problem.<br>A next step for a stubborn error.<br>An explanation that finally clicks.</p></section>
-    <footer><span>Processed on your computer</span><span>Capture only when you ask</span></footer>
+    <footer><span id="processing-location">Choose your AI in settings</span><span>Capture only when you ask</span></footer>
   </main>
 </body>
 </html>

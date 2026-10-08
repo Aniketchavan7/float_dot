@@ -1,79 +1,63 @@
 # Float Dot
 
-**Ask your screen. Keep your flow.**
+**Ask your screen from a floating desktop icon.**
 
-A floating desktop assistant: press a shortcut, ask a question with your microphone, and get an answer grounded in the window you selected. Start with coding practice and debugging; expand into meeting and document help after the core works.
+Windows Electron desktop app. It opens as an always-on-top dot; click to expand, choose a window/display, take or open a screenshot, and get an explanation. Supports spoken questions and follow-ups.
 
-Status: Core prototype implemented with passing test suite (17/17 tests), desktop speech verification, 30-case evaluation corpus, meeting mode (rolling transcript & action-item extractor), and verified portable packaging. See [BUILD_STATUS.md](BUILD_STATUS.md).
+Choose **OpenAI, Anthropic, Gemini, another OpenAI-compatible API, or local Ollama**. You supply your provider/model and API key where required. No Float Dot website, account or hosted backend is needed.
 
-## Run the application (Windows x64)
-
-Use Node.js 24 or newer and an installed Ollama runtime. From this repository:
+## Run
 
 ```powershell
 npm ci
-npm run setup:local
-```
-
-Start the local model server in a separate PowerShell terminal:
-
-```powershell
-$env:OLLAMA_NO_CLOUD = '1'
-ollama serve
-```
-
-If Ollama is already running, configure/restart that instance deliberately rather than starting a second server. Then, in the project terminal:
-
-```powershell
-ollama pull qwen3:4b
-npm run check:local
 npm start
 ```
 
-First setup downloads free OCR/speech assets and roughly 2.5 GB of model weights. Subsequent content processing uses local assets and the loopback model API. These assets and dependencies are not committed to Git.
+Click the floating dot, then the settings icon. Choose a provider, enter its model ID and your API key, and click **Save AI settings**. For Other, supply an API base URL such as `https://your-provider.example/v1`; it must support Chat Completions streaming. HTTPS is required for remote endpoints; localhost HTTP is supported.
 
-Choose a window and a mode (DSA hints, Debug, Explain, or Meeting). Click **Ask with voice**, speak, then click again to stop. Review the captured image/text and recognized question, then request the answer. **Read screen** supports a typed diagnostic question. Voice follow-ups can reuse the current capture. The collapse button opens a floating dot; click the dot to reopen.
+Enable **Send the screenshot image** when using a vision-capable model. Image mode skips OCR and can explain screenshots without installing Ollama or speech assets. Model IDs are user-controlled; support and account availability vary by provider.
 
-In **Meeting mode**, Float Dot listens to room audio through your microphone, streams a live timestamped rolling transcript, and allows you to summarize confirmed decisions, extract action items with citations, and export markdown meeting notes.
-
-The current shortcut is fixed at `Ctrl+Shift+Space`.
-
-## Verification & testing
+For OCR text mode or voice input, install local assets:
 
 ```powershell
-npm test             # Run 17 unit and integration tests
-npm run test:audio   # Verify Whisper runtime with synthetic WAV audio
-npm run test:eval    # Run live end-to-end AI evaluation against Ollama
-npm run smoke        # Run automated Electron UI, AudioWorklet, and OCR smoke test
-npm run pack         # Package Windows standalone portable app into dist\win-unpacked
+npm run setup:local
 ```
 
-Packaging produces an unpacked portable application (`dist/win-unpacked/Float Dot.exe`). Live AI inference on local quantized models (Qwen3 4B) operates offline with warm TTFB ~930ms–1029ms on supported hardware.
+For local reasoning, install/start Ollama and download a model of your choice. Select Ollama and enter an installed model ID. The local list is not restricted to Qwen. Keep Ollama cloud features disabled for the local path. API providers may charge for requests; Ollama does not require a paid inference API.
 
-## Decisions
+## Use the desktop app
 
-- Windows first, using selected-window capture and push-to-talk.
-- Local speech, local OCR, and local reasoning by default.
-- No required paid APIs, account, server, subscription, or domain for the core prototype.
-- A permanently free core; revenue experiments around workflow packs, setup, and team customization.
-- Adapt useful OpenCluely components after an audit rather than treating the upstream app as production-ready.
+- Click the dot to open the panel; use the collapse button to return to the dot. The tray menu also opens it.
+- Pick a window or display and click **Read screen**. With no question entered, Float Dot asks for an explanation.
+- Click **Ask with voice**, speak and click again to stop. The default shortcut is `Ctrl+Shift+Space`; change it in settings.
+- Take a Windows snip, then click **Use clipboard screenshot**; or choose **Open screenshot** for a saved image. Imports are explicit, never automatically watched or uploaded.
+- Review the preview, timestamp, question and destination. Click **Explain with…** to send to the chosen provider.
+- Follow-ups reuse the capture. Asking to read the screen again recaptures the selected source. Read screen always takes a new snapshot.
+- Stop cancels work. Clear removes in-memory context. Copy/export and installed local read-aloud are available.
 
-## Read the plan
+API keys are encrypted with the OS and stored separately from settings under Electron userData. The renderer never receives stored keys. Custom keys are bound to their endpoint; remove a key through AI settings. Capture images stay in memory; the selected provider receives extracted text or the image according to the saved mode. There is no automatic provider fallback.
 
-| File | Purpose |
-| --- | --- |
-| [PRD.md](PRD.md) | Complete product requirements, proposed tech stack, user journeys, data limits, and acceptance criteria |
-| [BUILD_STATUS.md](BUILD_STATUS.md) | Implemented prototype features, actual verification, and current status |
-| [PROVENANCE.md](PROVENANCE.md) | Code-reference and dependency/asset provenance |
-| [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) | Pinned OpenCluely reference, concrete reuse map, and revised effort/calendar estimates |
-| [PLAN.md](PLAN.md) | Product, architecture, use cases, milestones, cost model, and launch strategy |
-| [BACKLOG.md](BACKLOG.md) | Ordered engineering tasks with acceptance criteria |
-| [SOURCES.md](SOURCES.md) | Primary references and facts verified on 8 October 2026 |
+## Verification
 
-## First demo
+```powershell
+npm test
+npm run smoke
+npm run pack
+```
 
-Open a DSA practice problem, select its window, press `Ctrl+Shift+Space`, and say: **“Give me one hint without revealing the solution.”** Float Dot transcribes locally, reads the visible text, and streams a hint into an expandable floating card. Ask **“Why does that help?”** to continue with the same context.
+32 automated tests and the desktop smoke pass, including synthetic screenshot -> loopback mock API -> answer, and OS key encryption. Cloud requests were tested with protocol fixtures, not real paid accounts. The native screenshot picker/clipboard, multi-display capture, live microphone, offline local flow and packaged external-run still need hands-on validation.
 
-## What free means
+`npm run test:eval` runs the existing 30-case **local Ollama corrected-text** benchmark. `-- --sample` selects three cases; `-- --sample --reasoning` tests the optional slower Qwen compatibility mode. These commands do not evaluate the configured cloud provider. Live local model results remain below the original performance gate.
 
-The plan targets zero required software/API spend using a computer you already own. Model downloads, disk space, electricity, development time, and hardware are real costs. Local speed and quality need benchmarking. Income and paid demand have not been established.
+`npm run pack` creates `dist/win-unpacked/Float Dot.exe`; `npm run build:win` targets a portable executable. Packaging alone is not a release certification.
+
+## Project documents
+
+- [PRD.md](PRD.md): current desktop/provider requirements.
+- [PLAN.md](PLAN.md): delivery order.
+- [BUILD_STATUS.md](BUILD_STATUS.md): actual checks and limitations.
+- [BACKLOG.md](BACKLOG.md): remaining work.
+- [PROVENANCE.md](PROVENANCE.md): source/dependency provenance.
+- [SOURCES.md](SOURCES.md): reference links.
+
+Basic local use remains available. Revenue experiments focus on setup help and tailored workflows after repeat-use validation.

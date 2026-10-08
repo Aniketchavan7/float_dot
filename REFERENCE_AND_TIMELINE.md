@@ -1,6 +1,6 @@
 # OpenCluely reference and Float Dot timeline
 
-Updated: 8 October 2026. Scope: source inspection and implementation planning; no application implementation or runtime benchmark has been performed.
+Historical source inspection and original estimate. The current implementation and provider-choice scope are in PRD.md and BUILD_STATUS.md; the local-only assumptions and calendar below are superseded.
 
 ## Reference pinned locally
 

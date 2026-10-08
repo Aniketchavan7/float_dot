@@ -1,5 +1,14 @@
 const MODES = ['dsa', 'debug', 'general', 'meeting'];
-const MODEL_PATTERN = /^qwen3:(?:0\.6b|1\.7b|4b|8b)$/;
+const PROVIDERS = ['ollama', 'openai', 'anthropic', 'gemini', 'compatible'];
+function modelName(value) { return text(value, 'Model ID', 200); }
+function baseURL(value) {
+  const url = new URL(text(value, 'Endpoint', 500));
+  if (url.username || url.password || url.search || url.hash ||
+      (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))) {
+    throw new Error('Use an HTTPS API base URL, or HTTP on localhost. Do not put keys in the URL.');
+  }
+  return url.href.replace(/\/$/, '');
+}
 function text(value, name, max = 2000) {
   if (typeof value !== 'string' || !value.trim() || value.length > max) {
     throw new Error(`${name} must contain 1–${max} characters.`);
@@ -9,15 +18,27 @@ function text(value, name, max = 2000) {
 function validateSettings(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid settings.');
   const result = {};
+  if ('provider' in input) {
+    if (!PROVIDERS.includes(input.provider)) throw new Error('Unknown AI provider.');
+    result.provider = input.provider;
+  }
+  if ('baseURL' in input) result.baseURL = input.baseURL === '' ? '' : baseURL(input.baseURL);
+  if ('hotkey' in input) {
+    if (typeof input.hotkey !== 'string' || !/^(?:CommandOrControl|Ctrl|Alt|Shift)(?:\+(?:CommandOrControl|Ctrl|Alt|Shift))*\+(?:Space|[A-Z0-9]|F(?:[1-9]|1[0-2]))$/.test(input.hotkey)) throw new Error('Use a shortcut such as Ctrl+Shift+Space or Ctrl+Alt+F8.');
+    result.hotkey = input.hotkey;
+  }
+  if ('microphoneId' in input) {
+    if (typeof input.microphoneId !== 'string' || input.microphoneId.length > 256) throw new Error('Invalid microphone.');
+    result.microphoneId = input.microphoneId;
+  }
   if ('model' in input) {
-    if (!MODEL_PATTERN.test(input.model)) throw new Error('Choose a supported downloaded Qwen3 model.');
-    result.model = input.model;
+    result.model = modelName(input.model);
   }
   if ('mode' in input) {
     if (!MODES.includes(input.mode)) throw new Error('Unknown assistant mode.');
     result.mode = input.mode;
   }
-  for (const key of ['confirmCapture', 'readAloud']) {
+  for (const key of ['confirmCapture', 'readAloud', 'reasoning', 'sendImage']) {
     if (key in input) {
       if (typeof input[key] !== 'boolean') throw new Error(`Invalid ${key}.`);
       result[key] = input[key];
@@ -49,4 +70,4 @@ function validateCrop(crop, size) {
     || x + width > size.width || y + height > size.height) throw new Error('Crop must stay within the selected image.');
   return { x, y, width, height };
 }
-module.exports = { text, MODES, validateSettings, validateAudio, validateCrop };
+module.exports = { text, MODES, PROVIDERS, modelName, baseURL, validateSettings, validateAudio, validateCrop };

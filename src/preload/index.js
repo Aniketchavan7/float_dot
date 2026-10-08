@@ -7,6 +7,7 @@ function subscribe(channel, handler) {
 contextBridge.exposeInMainWorld('floatDot', {
   status: () => ipcRenderer.invoke('fd:status'),
   settings: input => ipcRenderer.invoke('fd:settings', input),
+  credentials: input => ipcRenderer.invoke('fd:credentials', input),
   windows: () => ipcRenderer.invoke('fd:windows'),
   prepare: input => ipcRenderer.invoke('fd:prepare', input),
   transcribe: input => ipcRenderer.invoke('fd:transcribe', input),
@@ -30,6 +31,7 @@ contextBridge.exposeInMainWorld('floatDot', {
   onHotkey: handler => subscribe('fd:hotkey', handler),
   onCancel: handler => subscribe('fd:cancel-recording', handler),
   onMeetingSegment: handler => subscribe('fd:meeting:segment', handler),
+  onMeetingError: handler => subscribe('fd:meeting:error', handler),
   onMeetingSummaryStart: handler => subscribe('fd:meeting:summary-started', handler),
   onMeetingSummaryDelta: handler => subscribe('fd:meeting:summary-delta', handler),
   onMeetingSummaryDone: handler => subscribe('fd:meeting:summary-done', handler),

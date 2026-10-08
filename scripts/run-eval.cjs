@@ -27,8 +27,8 @@ async function run() {
   console.log(`Running evaluation cases from corpus...`);
   console.log(`========================================\n`);
 
-  // Run 3 representative benchmark cases (one from each mode) for fast verification
-  const sampleIndices = [0, 10, 20]; // Two Sum (DSA), Undefined map (Debug), useEffect (General)
+  // Full coverage by default. Sampling is explicitly opt-in, never a release gate.
+  const sampleIndices = process.argv.includes('--sample') ? [0, 10, 20] : corpus.map((_, index) => index);
   const results = [];
 
   for (const idx of sampleIndices) {
@@ -50,10 +50,12 @@ async function run() {
     try {
       fullResponse = await streamAnswer({
         model,
+        reasoning: process.argv.includes('--reasoning'),
         messages,
-        signal: AbortSignal.timeout(60000),
+        signal: AbortSignal.timeout(120000),
         onDelta: (delta) => {
           if (!firstTokenTime) firstTokenTime = Date.now();
+          fullResponse += delta;
         }
       });
 
@@ -80,10 +82,12 @@ async function run() {
         totalDurationMs: totalDuration,
         matchedKeywords,
         forbiddenViolations,
+        response: fullResponse,
+        reviewStatus: 'pending-human-review',
         responseExcerpt: fullResponse.slice(0, 150).replace(/\n/g, ' ') + '...'
       });
 
-      console.log(`Status: ${passed ? 'PASS' : 'WARN'} | TTFB: ${ttfb}ms | Total: ${totalDuration}ms`);
+      console.log(`Heuristic: ${passed ? 'MATCH' : 'FAIL'} (human review required) | TTFB: ${ttfb}ms | Total: ${totalDuration}ms`);
       console.log(`Answer excerpt: "${results.at(-1).responseExcerpt}"\n`);
     } catch (err) {
       console.error(`FAILED: ${err.message}\n`);
@@ -92,13 +96,23 @@ async function run() {
         name: testCase.name,
         mode: testCase.mode,
         passed: false,
+        response: fullResponse,
+        reviewStatus: 'failed-inference',
         error: err.message
       });
     }
   }
 
   const allPassed = results.every(r => r.passed);
-  console.log(`\nEvaluation Summary: ${results.filter(r => r.passed).length}/${results.length} passed.`);
+  const reportDir = path.join(__dirname, '../.artifacts');
+  await fs.mkdir(reportDir, { recursive: true });
+  await fs.writeFile(path.join(reportDir, 'evaluation-report.json'), JSON.stringify({
+    createdAt: new Date().toISOString(), model: models.find(m => m.name === model),
+    reasoning: process.argv.includes('--reasoning'),
+    scope: 'Corrected text only; does not evaluate microphone or OCR',
+    releaseGatePassed: false, humanReviewRequired: true, casesRun: results.length, results
+  }, null, 2));
+  console.log(`\nHeuristic matches: ${results.filter(r => r.passed).length}/${results.length}. Full answers saved for human review; this is not a release-gate pass.`);
   if (!allPassed) {
     process.exitCode = 1;
   }

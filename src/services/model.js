@@ -1,20 +1,26 @@
 const ENDPOINT = 'http://127.0.0.1:11434';
-const { MODEL_PATTERN } = { MODEL_PATTERN: /^qwen3:(?:0\.6b|1\.7b|4b|8b)$/ };
+const { modelName } = require('../shared/validation');
 async function readJSON(response) {
   if (!response.ok) throw new Error(`Local model server returned HTTP ${response.status}.`);
   return response.json();
 }
 async function listModels() {
   const data = await readJSON(await fetch(`${ENDPOINT}/api/tags`, { signal: AbortSignal.timeout(4000), redirect: 'error' }));
-  return (data.models || []).filter(m => MODEL_PATTERN.test(m.name) && !m.remote_host).map(m => ({ name: m.name, size: m.size, digest: m.digest }));
+  return (data.models || []).filter(m => typeof m.name === 'string' && !m.remote_host && !m.remote_model && !/:.*cloud/i.test(m.name)).map(m => ({ name: m.name, size: m.size, digest: m.digest }));
 }
-async function streamAnswer({ model, messages, signal, onDelta }) {
+async function streamAnswer({ model, messages, signal, onDelta, reasoning = false, image }) {
+  modelName(model);
+  // Older downloaded Qwen3 templates open a thinking block unconditionally.
+  // The model's explicit non-thinking instruction complements the API flag.
+  const requestMessages = messages.map((message, index) => index === messages.length - 1 && message.role === 'user'
+    ? { ...message, content: /^qwen3[:/]/i.test(model) ? `${message.content}\n${reasoning ? '/think' : '/no_think'}` : message.content,
+        ...(image ? { images: [image] } : {}) } : message);
   const timeout = AbortSignal.timeout(120000);
   const response = await fetch(`${ENDPOINT}/api/chat`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.any([signal, timeout]),
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: true, think: false, keep_alive: '2m',
-      options: { num_ctx: 8192, num_predict: 512, temperature: 0.3 } })
+    body: JSON.stringify({ model, messages: requestMessages, stream: true, ...(/^qwen3[:/]/i.test(model) ? { think: reasoning } : {}), keep_alive: '2m',
+      options: { num_ctx: 8192, num_predict: reasoning ? 2048 : 512, temperature: 0.3 } })
   });
   if (!response.ok) throw new Error(response.status === 404 ? 'The selected model is not downloaded. Run the local setup command.' : `Local inference failed (HTTP ${response.status}).`);
   const reader = response.body.getReader();
@@ -29,6 +35,7 @@ async function streamAnswer({ model, messages, signal, onDelta }) {
     answer += delta;
     if (delta) onDelta(delta);
     if (chunk.done) finished = true;
+    if (chunk.done && chunk.done_reason === 'length') throw new Error(reasoning ? 'Answer reached the output limit. Ask a narrower question.' : 'Answer reached the output limit. Try the slower reasoning compatibility option in Local setup, or ask a narrower question.');
   }
   try {
     while (true) {
