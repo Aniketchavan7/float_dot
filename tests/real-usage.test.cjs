@@ -234,3 +234,59 @@ test('real usage: pipeline from audio question and captured window into coordina
   assert.equal(events.at(-1).type, 'done');
   assert.equal(coordinator.hintLevel, 1);
 });
+
+test('real usage: session memory preserves multi-turn conversation across screen recaptures on same window', async () => {
+  const messagesReceived = [];
+  const coordinator = new Coordinator({
+    maxHistory: 8,
+    emit: () => {},
+    infer: async ({ messages }) => {
+      messagesReceived.push(messages);
+      return `Answer for ${messages.at(-1).content}`;
+    }
+  });
+
+  // Capture 1: Initial capture
+  const capture1 = {
+    id: 'capture-uuid-1',
+    sourceId: 'screen:default',
+    name: 'Entire Screen',
+    text: 'nums = [2, 7, 11, 15], target = 9',
+    capturedAt: new Date().toISOString()
+  };
+
+  await coordinator.ask({ question: 'What data structure should I use?', mode: 'dsa', model: 'qwen3:1.7b', context: capture1 });
+  assert.equal(coordinator.history.length, 2);
+  assert.equal(coordinator.hintLevel, 1);
+
+  // Capture 2: User takes a new screenshot with updated code on the SAME screen
+  const capture2 = {
+    id: 'capture-uuid-2',
+    sourceId: 'screen:default',
+    name: 'Entire Screen',
+    text: 'seen = {}\nfor i, n in enumerate(nums): pass',
+    capturedAt: new Date().toISOString()
+  };
+
+  // Follow-up question on capture 2
+  await coordinator.ask({ question: 'How do I check complements in the hash map?', mode: 'dsa', model: 'qwen3:1.7b', context: capture2 });
+  assert.equal(coordinator.history.length, 4, 'Session memory must retain prior turn despite new capture UUID');
+  assert.equal(coordinator.hintLevel, 2);
+
+  // Verify that the prompt sent to LLM included the prior turn
+  const secondPromptMessages = messagesReceived[1];
+  assert.equal(secondPromptMessages.some(m => m.content === 'What data structure should I use?'), true);
+  assert.equal(secondPromptMessages.some(m => m.content === 'Answer for What data structure should I use?'), true);
+  assert.equal(secondPromptMessages.at(-1).content, 'How do I check complements in the hash map?');
+
+  // Follow-up question 2
+  await coordinator.ask({ question: 'What is the space complexity?', mode: 'dsa', model: 'qwen3:1.7b', context: capture2 });
+  assert.equal(coordinator.history.length, 6, 'Session memory must grow to 6 messages across 3 turns');
+  assert.equal(coordinator.hintLevel, 3);
+
+  // Clear session
+  coordinator.clear();
+  assert.equal(coordinator.history.length, 0);
+  assert.equal(coordinator.hintLevel, 0);
+});
+

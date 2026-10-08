@@ -82,7 +82,9 @@ button:disabled {
   border-radius: 18px;
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--line-subtle);
   overflow: hidden;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: paint;
 }
 
 body[data-state="recording"] #panel {
@@ -379,6 +381,30 @@ textarea#question::placeholder {
   align-items: center;
 }
 
+.send-button {
+  flex: 0 0 74px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.send-button:hover:not(:disabled) {
+  background: #fb923c;
+  transform: translateY(-1px);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 .record-button {
   flex: 1.2;
   display: flex;
@@ -572,6 +598,17 @@ textarea#question::placeholder {
   font-weight: 600;
 }
 
+.session-badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-glow);
+  letter-spacing: 0.2px;
+}
+
 .answer-header-actions {
   display: flex;
   align-items: center;
@@ -587,6 +624,8 @@ textarea#question::placeholder {
   overflow-y: auto;
   overflow-wrap: anywhere;
   padding-right: 4px;
+  contain: content;
+  will-change: contents;
 }
 
 .answer p { margin: 8px 0; }

@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { validateSettings } = require('../shared/validation');
-const DEFAULTS = Object.freeze({ schemaVersion: 2, provider: 'ollama', baseURL: '', sendImage: false, model: 'qwen3:1.7b', mode: 'dsa', confirmCapture: true, readAloud: false, reasoning: false, theme: 'system', hotkey: 'CommandOrControl+Shift+Space', microphoneId: '' });
+const DEFAULTS = Object.freeze({ schemaVersion: 2, provider: 'ollama', baseURL: '', sendImage: false, model: 'qwen3:1.7b', mode: 'dsa', confirmCapture: false, readAloud: false, reasoning: false, theme: 'system', hotkey: 'CommandOrControl+Shift+Space', microphoneId: '' });
 async function atomicWrite(targetPath, data) {
   const tmp = `${targetPath}.${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`;
   await fs.mkdir(path.dirname(targetPath), { recursive: true });

@@ -21,7 +21,7 @@ function buildMessages({ mode, question, context, history = [], hintLevel = 0 })
   return [
     { role: 'system', content: `${BASE}\n${MODES[mode]}\nCurrent hint level: ${hintLevel}.\nReference captured at ${context.capturedAt}.` },
     { role: 'user', content: `Captured screen reference only:\n<screen_excerpt>\n${excerpt}\n</screen_excerpt>` },
-    ...history.slice(-4).map(m => ({ role: m.role, content: m.content.slice(0, 1000) })),
+    ...history.map(m => ({ role: m.role, content: m.content.slice(0, 2000) })),
     { role: 'user', content: question }
   ];
 }

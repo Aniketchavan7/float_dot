@@ -50,17 +50,40 @@ function resetError() {
   $('error').hidden = true;
 }
 
-function renderAnswer() {
+let renderRaf = null;
+
+function renderAnswer(isFinal = false) {
+  if (!answer) {
+    $('answer').innerHTML = '';
+    return;
+  }
   const html = window.marked.parse(answer, { breaks: true });
   $('answer').innerHTML = window.DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'pre', 'code', 'h1', 'h2', 'h3', 'blockquote', 'hr'],
     ALLOWED_ATTR: ['class']
   });
-  window.Prism?.highlightAllUnder($('answer'));
+  $('answer').scrollTop = $('answer').scrollHeight;
+  if (isFinal) {
+    window.Prism?.highlightAllUnder($('answer'));
+  }
+}
+
+function scheduleRender(isFinal = false) {
+  if (isFinal) {
+    if (renderRaf) { cancelAnimationFrame(renderRaf); renderRaf = null; }
+    renderAnswer(true);
+    return;
+  }
+  if (renderRaf) return;
+  renderRaf = requestAnimationFrame(() => {
+    renderRaf = null;
+    renderAnswer(false);
+  });
 }
 
 function lock(value) {
   busy = value;
+  $('send').disabled = value;
   $('capture').disabled = value;
   $('record').disabled = value;
   $('confirm').disabled = value;
@@ -295,12 +318,14 @@ async function prepare(audio, crop, openScreenshot = false) {
   $('ocr-warning').hidden = captured.confidence >= 75 && !captured.truncated;
   $('ocr-warning').textContent = 'Check extracted text. Operators or small code may be misread' + (captured.truncated ? '; only the first part is included.' : '.');
 
-  $('capture-review').hidden = false;
-  lock(false);
-  state(`Capture ready · ${providerDescription()}`);
-  $('confirm').textContent = `Explain with ${providerLabels[preferences.provider] || 'AI'}`;
-
-  if (!preferences.confirmCapture) await ask();
+  if (audio || !preferences.confirmCapture) {
+    await ask();
+  } else {
+    $('capture-review').hidden = false;
+    lock(false);
+    state(`Capture ready · ${providerDescription()}`);
+    $('confirm').textContent = `Explain with ${providerLabels[preferences.provider] || 'AI'}`;
+  }
 }
 
 async function ask() {
@@ -319,6 +344,27 @@ async function ask() {
   state(`Asking ${providerDescription()}…`, 'busy');
 
   await call('ask', { question: $('question').value, mode, contextId: context.id });
+}
+
+async function sendQuestion() {
+  if (busy) return;
+  const q = $('question').value.trim();
+  if (!q) {
+    await prepare();
+    return;
+  }
+  if (context && $('reuse-capture').checked) {
+    await ask();
+  } else {
+    await prepare();
+  }
+}
+
+function prepareFollowUp() {
+  $('question').value = '';
+  $('question').placeholder = 'Ask a follow-up (e.g. "What is the time complexity?", "Show how to optimize this")…';
+  $('question').focus();
+  $('question').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function record() {
@@ -389,11 +435,15 @@ async function clear() {
   await call('clear');
   context = null;
   answer = '';
+  renderAnswer(true);
+  $('session-badge').hidden = true;
   $('meeting-transcript-list').replaceChildren();
   $('meeting-transcript-section').hidden = true;
   $('answer-section').hidden = true;
   $('capture-review').hidden = true;
   $('empty').hidden = false;
+  $('question').value = '';
+  $('question').placeholder = 'Ask about your screen, code, or interview problem… (Enter to send, Shift+Enter for newline)';
 }
 
 function readAloud() {
@@ -524,12 +574,20 @@ if (location.hash === '#dot') {
   document.body.classList.add('dot-view');
   $('floating-dot')?.addEventListener('click', () => call('expand').catch(() => {}));
 } else {
+  on('send', sendQuestion);
   on('record', record);
   on('stop', stop);
   on('capture', () => prepare());
   on('confirm', ask);
   on('open-screenshot', () => prepare(undefined, undefined, true));
   on('paste-screenshot', () => prepare(undefined, undefined, 'clipboard'));
+
+  $('question').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      guarded(sendQuestion);
+    }
+  });
 
   $('provider').addEventListener('change', () => {
     providerFields();
@@ -588,7 +646,7 @@ if (location.hash === '#dot') {
 
   on('export', () => call('export', `# Float Dot note\n\nSource: ${context?.name}\nCaptured: ${context?.capturedAt}\n\n${answer}`));
   on('speak', readAloud);
-  on('follow-up', ask);
+  on('follow-up', prepareFollowUp);
   on('settings-toggle', () => { $('setup').hidden = !$('setup').hidden; });
 
   on('meeting-record', startMeeting);
@@ -638,16 +696,26 @@ if (location.hash === '#dot') {
   });
 
   api.onAnswer(event => {
-    if (event.type === 'started') { activeRequest = event.requestId; return; }
+    if (event.type === 'started') {
+      activeRequest = event.requestId;
+      state(`Answering · ${providerDescription()}`, 'busy');
+      return;
+    }
     if (event.requestId !== activeRequest) return;
     if (event.type === 'delta') {
       answer += event.delta;
-      renderAnswer();
-      state(`Answering · ${providerDescription()}`, 'busy');
+      scheduleRender(false);
     }
     if (event.type === 'done') {
       lock(false);
+      scheduleRender(true);
       state('Answer complete · ready for follow-up');
+      if (event.turn && event.turn > 1) {
+        $('session-badge').textContent = `Turn ${event.turn} · Memory Active`;
+        $('session-badge').hidden = false;
+      } else {
+        $('session-badge').hidden = true;
+      }
       if (preferences.readAloud) guarded(readAloud);
     }
     if (event.type === 'error') {
@@ -677,7 +745,7 @@ if (location.hash === '#dot') {
       row.remove();
       meetingRequest = null;
       answer = '';
-      renderAnswer();
+      renderAnswer(true);
     }));
     row.append(time, txt, remove);
     $('meeting-transcript-list').append(row);
@@ -689,12 +757,12 @@ if (location.hash === '#dot') {
   api.onMeetingSummaryDelta(event => {
     if (event.requestId !== meetingRequest) return;
     answer += event.delta;
-    renderAnswer();
-    state('Generating meeting summary…', 'busy');
+    scheduleRender(false);
   });
   api.onMeetingSummaryDone(event => {
     if (event.requestId !== meetingRequest) return;
     lock(false);
+    scheduleRender(true);
     state('Meeting summary ready');
   });
   api.onMeetingSummaryError(event => {

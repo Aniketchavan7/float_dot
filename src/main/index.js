@@ -15,7 +15,10 @@ const { text, MODES, validateAudio, validateCrop, validateSettings } = require('
 protocol.registerSchemesAsPrivileged([{ scheme: 'floatdot', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 app.setName('Float Dot');
 const smoke = process.argv.includes('--smoke');
-if (smoke) app.commandLine.appendSwitch('use-fake-device-for-media-stream');
+if (smoke) {
+  app.commandLine.appendSwitch('use-fake-device-for-media-stream');
+  app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
+}
 if (smoke) app.setPath('userData', path.join(__dirname, '../../.artifacts/smoke-profile'));
 const root = path.join(__dirname, '../..');
 const assets = app.isPackaged ? path.join(process.resourcesPath, 'models') : path.join(root, '.models');
@@ -53,7 +56,7 @@ async function checkProvider() {
     if (!settings.value.baseURL) throw new Error('Set the compatible API base URL in AI settings.');
   } else if (!credentials.get(settings.value)) throw new Error('Save your API key in AI settings.');
 }
-const coordinator = new Coordinator({ infer, emit: value => {
+const coordinator = new Coordinator({ infer, maxHistory: 8, emit: value => {
   if (panel && !panel.isDestroyed()) panel.webContents.send('fd:answer', value);
 } });
 const meeting = new MeetingService({
@@ -207,7 +210,7 @@ function installIPC() {
         : await ocr.read(image.buffer, job.controller.signal);
       job.controller.signal.throwIfAborted();
       if (preparation !== job) throw new Error('Capture replaced by a newer request.');
-      context = { id: job.id, capturedAt: job.capturedAt, name: image.name, text: extraction.text, image: image.buffer.toString('base64'), imageMode: settings.value.sendImage };
+      context = { id: job.id, sourceId: input.sourceId || 'screen:default', capturedAt: job.capturedAt, name: image.name, text: extraction.text, image: image.buffer.toString('base64'), imageMode: settings.value.sendImage };
       const { image: _image, ...publicContext } = context;
       return { ...publicContext, transcript, preview: image.preview, dimensions: image.dimensions,
         confidence: extraction.confidence, truncated: extraction.truncated };
@@ -381,7 +384,7 @@ async function smokeTest() {
   const audioResult = await panel.webContents.executeJavaScript(`(async () => {
     const { Recorder } = await import('./audio.js');
     const recorder = new Recorder(() => {}); await recorder.start();
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 2500));
     const wav = await recorder.stop();
     return { length: wav.length, active: recorder.active, wav: Array.from(wav) };
   })()`, true);

@@ -65,8 +65,12 @@
 
           <!-- Prompt Box -->
           <div class="prompt-box">
-            <textarea id="question" rows="2" maxlength="2000" placeholder="Ask about your screen, code, or interview problem…"></textarea>
+            <textarea id="question" rows="2" maxlength="2000" placeholder="Ask about your screen, code, or interview problem… (Enter to send, Shift+Enter for newline)"></textarea>
             <div class="ask-actions">
+              <button id="send" class="primary-button send-button" title="Send question (Enter)">
+                <span class="btn-icon">➤</span>
+                <span id="send-label">Send</span>
+              </button>
               <button id="record" class="record-button">
                 <span class="record-symbol">●</span>
                 <span id="record-label">Ask with voice</span>
@@ -79,7 +83,7 @@
             </div>
             <p class="shortcut">
               <span>Shortcut:</span> <strong id="shortcut-label">Ctrl + Shift + Space</strong>
-              <span class="shortcut-tip">to start / stop voice</span>
+              <span class="shortcut-tip">to start / stop voice · Enter to send</span>
             </p>
           </div>
         </div>
@@ -136,6 +140,7 @@
           <div class="answer-header-left">
             <span class="sparkle-icon">✨</span>
             <h2>Answer</h2>
+            <span id="session-badge" class="session-badge" hidden>Session Memory</span>
           </div>
           <div class="answer-header-actions">
             <button id="answer-stop" class="stop-button-compact" hidden>⏹ Stop</button>
