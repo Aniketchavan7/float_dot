@@ -260,14 +260,25 @@ function createWindows() {
     win.webContents.on('will-navigate', event => event.preventDefault());
   }
   panel.on('close', () => { cancel(); quitting = true; app.quit(); });
-  panel.loadURL('floatdot://app/index.html');
-  dot.loadURL('floatdot://app/index.html#dot');
-  dot.once('ready-to-show', () => {
+  panel.once('ready-to-show', () => {
     if (!smoke) {
-      if (process.argv.includes('--panel')) panel.show();
-      else dot.showInactive();
+      panel.show();
+      panel.focus();
     }
   });
+  panel.webContents.once('did-finish-load', () => {
+    if (!smoke && !panel.isVisible() && !dot.isVisible()) {
+      panel.show();
+      panel.focus();
+    }
+  });
+  dot.once('ready-to-show', () => {
+    if (!smoke && !panel.isVisible()) {
+      dot.showInactive();
+    }
+  });
+  panel.loadURL('floatdot://app/index.html');
+  dot.loadURL('floatdot://app/index.html#dot');
   screen.on('display-removed', () => {
     const area = screen.getPrimaryDisplay().workArea;
     panel.setPosition(area.x + 20, area.y + 20); dot.setPosition(area.x + area.width - 104, area.y + area.height - 124);
