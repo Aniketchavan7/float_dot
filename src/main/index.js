@@ -28,7 +28,7 @@ let panel, dot, context = null, preparation = null, quitting = false, requestRev
 let tray, registeredHotkey = null, shortcutError = null;
 function registerHotkey(value) {
   if (value === registeredHotkey) return;
-  if (!globalShortcut.register(value, () => { dot.hide(); panel.show(); panel.webContents.send('fd:hotkey'); })) throw new Error('Shortcut is already in use. Choose another in settings.');
+  if (!globalShortcut.register(value, () => { dot.hide(); panel.show(); panel.focus(); panel.webContents.send('fd:hotkey'); })) throw new Error('Shortcut is already in use. Choose another in settings.');
   if (registeredHotkey) globalShortcut.unregister(registeredHotkey);
   registeredHotkey = value; shortcutError = null;
 }
@@ -249,7 +249,7 @@ function configureSession() {
 function createWindows() {
   const bounds = screen.getPrimaryDisplay().workArea;
   panel = new BrowserWindow({ width: 480, height: Math.min(820, bounds.height - 40), minWidth: 400, minHeight: 600,
-    x: bounds.x + bounds.width - 500, y: bounds.y + 20, title: 'Float Dot', show: false, alwaysOnTop: true,
+    x: bounds.x + bounds.width - 500, y: bounds.y + 20, title: 'Float Dot', show: !smoke, alwaysOnTop: true,
     backgroundColor: '#f5f3ee', autoHideMenuBar: true,
     webPreferences: { preload: path.join(root, 'src/preload/index.js'), nodeIntegration: false, contextIsolation: true, sandbox: true, backgroundThrottling: false } });
   dot = new BrowserWindow({ width: 84, height: 84, x: bounds.x + bounds.width - 104, y: bounds.y + bounds.height - 124,
@@ -260,25 +260,12 @@ function createWindows() {
     win.webContents.on('will-navigate', event => event.preventDefault());
   }
   panel.on('close', () => { cancel(); quitting = true; app.quit(); });
-  panel.once('ready-to-show', () => {
-    if (!smoke) {
-      panel.show();
-      panel.focus();
-    }
-  });
-  panel.webContents.once('did-finish-load', () => {
-    if (!smoke && !panel.isVisible() && !dot.isVisible()) {
-      panel.show();
-      panel.focus();
-    }
-  });
-  dot.once('ready-to-show', () => {
-    if (!smoke && !panel.isVisible()) {
-      dot.showInactive();
-    }
-  });
   panel.loadURL('floatdot://app/index.html');
   dot.loadURL('floatdot://app/index.html#dot');
+  if (!smoke) {
+    panel.show();
+    panel.focus();
+  }
   screen.on('display-removed', () => {
     const area = screen.getPrimaryDisplay().workArea;
     panel.setPosition(area.x + 20, area.y + 20); dot.setPosition(area.x + area.width - 104, area.y + area.height - 124);
@@ -378,6 +365,6 @@ else app.whenReady().then(async () => {
   await settings.load(); await credentials.load(); configureSession(); installIPC(); createWindows();
   if (smoke) await smokeTest();
 }).catch(error => { console.error(error.message); app.exit(1); });
-app.on('second-instance', () => { if (panel) { dot.hide(); panel.show(); } });
+app.on('second-instance', () => { if (panel) { dot.hide(); panel.show(); panel.focus(); } });
 app.on('before-quit', () => { if (!quitting) { quitting = true; cancel(); } globalShortcut.unregisterAll(); });
 app.on('window-all-closed', () => app.quit());
