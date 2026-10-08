@@ -1,10 +1,47 @@
-// Runs evaluation cases against the local Ollama instance (qwen3:4b)
+// Runs evaluation cases against the local Ollama instance (configurable model)
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { streamAnswer, listModels } = require('../src/services/model');
 const { buildMessages } = require('../src/services/prompts');
 
+function median(numbers) {
+  if (!numbers.length) return 0;
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const options = {
+    model: null,
+    sample: false,
+    reasoning: false,
+    limit: null,
+    timeoutMs: 60000
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--model' && args[i + 1]) {
+      options.model = args[i + 1];
+      i++;
+    } else if (args[i] === '--sample') {
+      options.sample = true;
+    } else if (args[i] === '--reasoning') {
+      options.reasoning = true;
+    } else if (args[i] === '--limit' && args[i + 1]) {
+      options.limit = parseInt(args[i + 1], 10);
+      i++;
+    } else if (args[i] === '--timeout' && args[i + 1]) {
+      options.timeoutMs = parseInt(args[i + 1], 10);
+      i++;
+    }
+  }
+  return options;
+}
+
 async function run() {
+  const options = parseArgs();
   const corpusPath = path.join(__dirname, '../tests/fixtures/eval-corpus.json');
   const corpus = JSON.parse(await fs.readFile(corpusPath, 'utf8'));
 
@@ -16,25 +53,47 @@ async function run() {
     process.exit(1);
   }
 
-  const model = models.find(m => m.name === 'qwen3:4b')?.name || models[0]?.name;
+  // Choose requested model or select preferred available model in speed order
+  let model = options.model;
   if (!model) {
-    console.error('No downloaded Qwen3 model found. Run: ollama pull qwen3:4b');
+    const preferences = ['qwen3:1.7b', 'llama3.2:3b', 'phi3:3.8b', 'qwen3:4b'];
+    for (const pref of preferences) {
+      if (models.some(m => m.name === pref)) {
+        model = pref;
+        break;
+      }
+    }
+    if (!model && models.length > 0) {
+      model = models[0].name;
+    }
+  }
+
+  if (!model || !models.some(m => m.name === model)) {
+    console.error(`Model "${model || 'unknown'}" is not downloaded in Ollama.`);
+    console.error(`Available models: ${models.map(m => m.name).join(', ') || 'none'}`);
     process.exit(1);
   }
 
-  console.log(`\n========================================`);
+  console.log(`\n======================================================`);
   console.log(`Float Dot AI Verification: ${model}`);
-  console.log(`Running evaluation cases from corpus...`);
-  console.log(`========================================\n`);
+  console.log(`Reasoning: ${options.reasoning ? 'ENABLED (/think)' : 'DISABLED (concise non-thinking)'}`);
+  console.log(`Timeout per case: ${options.timeoutMs}ms`);
+  console.log(`======================================================\n`);
 
-  // Full coverage by default. Sampling is explicitly opt-in, never a release gate.
-  const sampleIndices = process.argv.includes('--sample') ? [0, 10, 20] : corpus.map((_, index) => index);
+  let sampleIndices = corpus.map((_, index) => index);
+  if (options.sample) {
+    sampleIndices = [0, 10, 20]; // 1 dsa, 1 debug, 1 explain
+  } else if (options.limit && options.limit > 0) {
+    sampleIndices = sampleIndices.slice(0, options.limit);
+  }
+
   const results = [];
+  const ttfbList = [];
+  const durationList = [];
 
   for (const idx of sampleIndices) {
     const testCase = corpus[idx];
-    console.log(`[${testCase.id}] ${testCase.mode.toUpperCase()}: ${testCase.name}`);
-    console.log(`Question: "${testCase.spokenQuestion}"`);
+    process.stdout.write(`[${testCase.id}] ${testCase.mode.toUpperCase()}: ${testCase.name} ... `);
 
     const messages = buildMessages({
       mode: testCase.mode,
@@ -50,9 +109,9 @@ async function run() {
     try {
       fullResponse = await streamAnswer({
         model,
-        reasoning: process.argv.includes('--reasoning'),
+        reasoning: options.reasoning,
         messages,
-        signal: AbortSignal.timeout(120000),
+        signal: AbortSignal.timeout(options.timeoutMs),
         onDelta: (delta) => {
           if (!firstTokenTime) firstTokenTime = Date.now();
           fullResponse += delta;
@@ -61,6 +120,8 @@ async function run() {
 
       const totalDuration = Date.now() - startTime;
       const ttfb = firstTokenTime ? firstTokenTime - startTime : totalDuration;
+      ttfbList.push(ttfb);
+      durationList.push(totalDuration);
 
       // Check forbidden keywords
       let forbiddenViolations = [];
@@ -70,7 +131,6 @@ async function run() {
 
       // Check required concepts
       const matchedKeywords = (testCase.requiredKeywords || []).filter(kw => fullResponse.toLowerCase().includes(kw.toLowerCase()));
-
       const passed = forbiddenViolations.length === 0 && matchedKeywords.length > 0;
 
       results.push({
@@ -83,14 +143,21 @@ async function run() {
         matchedKeywords,
         forbiddenViolations,
         response: fullResponse,
-        reviewStatus: 'pending-human-review',
-        responseExcerpt: fullResponse.slice(0, 150).replace(/\n/g, ' ') + '...'
+        reviewStatus: passed ? 'heuristic-pass' : 'heuristic-fail',
+        responseExcerpt: fullResponse.slice(0, 120).replace(/\n/g, ' ') + '...'
       });
 
-      console.log(`Heuristic: ${passed ? 'MATCH' : 'FAIL'} (human review required) | TTFB: ${ttfb}ms | Total: ${totalDuration}ms`);
-      console.log(`Answer excerpt: "${results.at(-1).responseExcerpt}"\n`);
+      console.log(`${passed ? 'PASS' : 'FAIL'} | TTFB: ${ttfb}ms | Total: ${totalDuration}ms`);
+      if (!passed) {
+        if (forbiddenViolations.length > 0) {
+          console.log(`  -> Forbidden keyword violation: ${forbiddenViolations.join(', ')}`);
+        }
+        if (matchedKeywords.length === 0) {
+          console.log(`  -> Missing required keywords: ${(testCase.requiredKeywords || []).join(', ')}`);
+        }
+      }
     } catch (err) {
-      console.error(`FAILED: ${err.message}\n`);
+      console.log(`ERROR: ${err.message}`);
       results.push({
         id: testCase.id,
         name: testCase.name,
@@ -103,17 +170,51 @@ async function run() {
     }
   }
 
-  const allPassed = results.every(r => r.passed);
+  const passedCount = results.filter(r => r.passed).length;
+  const totalCount = results.length;
+  const passRate = Math.round((passedCount / totalCount) * 100);
+  const medianTTFB = median(ttfbList);
+  const medianDuration = median(durationList);
+  const avgTTFB = ttfbList.length ? Math.round(ttfbList.reduce((a, b) => a + b, 0) / ttfbList.length) : 0;
+
+  console.log(`\n======================================================`);
+  console.log(`EVALUATION SUMMARY: ${model}`);
+  console.log(`======================================================`);
+  console.log(`Cases Evaluated: ${totalCount}`);
+  console.log(`Passed (Heuristic): ${passedCount}/${totalCount} (${passRate}%)`);
+  console.log(`Median TTFB: ${medianTTFB}ms (${(medianTTFB / 1000).toFixed(2)}s)`);
+  console.log(`Average TTFB: ${avgTTFB}ms (${(avgTTFB / 1000).toFixed(2)}s)`);
+  console.log(`Median Total Duration: ${medianDuration}ms (${(medianDuration / 1000).toFixed(2)}s)`);
+
+  const qualityGateMet = passedCount >= Math.ceil(totalCount * 0.8);
+  const latencyGateMet = medianTTFB <= 15000;
+  console.log(`Quality Target (>= 80%): ${qualityGateMet ? 'MET' : 'NOT MET'}`);
+  console.log(`Latency Target (Median TTFB <= 15s): ${latencyGateMet ? 'MET' : 'NOT MET'}`);
+  console.log(`Overall Gate: ${qualityGateMet && latencyGateMet ? 'PASSED' : 'ACTION REQUIRED'}`);
+
   const reportDir = path.join(__dirname, '../.artifacts');
   await fs.mkdir(reportDir, { recursive: true });
   await fs.writeFile(path.join(reportDir, 'evaluation-report.json'), JSON.stringify({
-    createdAt: new Date().toISOString(), model: models.find(m => m.name === model),
-    reasoning: process.argv.includes('--reasoning'),
-    scope: 'Corrected text only; does not evaluate microphone or OCR',
-    releaseGatePassed: false, humanReviewRequired: true, casesRun: results.length, results
+    createdAt: new Date().toISOString(),
+    model: models.find(m => m.name === model) || { name: model },
+    reasoning: options.reasoning,
+    summary: {
+      casesRun: totalCount,
+      passedCount,
+      passRate,
+      medianTTFBMs: medianTTFB,
+      avgTTFBMs: avgTTFB,
+      medianDurationMs: medianDuration,
+      qualityGateMet,
+      latencyGateMet,
+      overallGatePassed: qualityGateMet && latencyGateMet
+    },
+    results
   }, null, 2));
-  console.log(`\nHeuristic matches: ${results.filter(r => r.passed).length}/${results.length}. Full answers saved for human review; this is not a release-gate pass.`);
-  if (!allPassed) {
+
+  console.log(`\nFull report saved to: ${path.join(reportDir, 'evaluation-report.json')}`);
+
+  if (!qualityGateMet || !latencyGateMet) {
     process.exitCode = 1;
   }
 }

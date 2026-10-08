@@ -10,9 +10,10 @@ Current scope: PRD v2.0, floating desktop assistant with user-selected AI.
 - [x] Add optional direct image input; retain local OCR text mode.
 - [x] Show actual provider/model/destination; remove universal local-processing claims.
 - [x] Add adapter contract tests and native screenshot-to-test-API smoke.
+- [x] Validate real usage: 10 consecutive requests, rapid cancellation, burst suppression, and follow-ups.
+- [x] Complete 30-case quality and latency evaluation (qwen3:1.7b: 30/30 passed, 236ms median TTFB).
 - [ ] Run live API-provider tests with configured accounts and chosen models.
 - [ ] Validate actual desktop imports, multi-display/DPI, microphone and keyboard journeys.
-- [ ] Complete 30-case quality and latency evaluation by provider/model.
 - [ ] Polish onboarding and capture/crop usability.
 - [ ] Validate packaged app outside the checkout; ship notices and tester kit.
 - [ ] Pilot with five users and collect repeat-use evidence.

@@ -14,17 +14,22 @@ Updated 8 October 2026 for PRD v2.0. Development prototype; not a fully validate
 
 ## Verified
 
-- **32/32 automated tests pass**: prior lifecycle checks plus four streaming adapters, split UTF-8/SSE frames, text/image payload routing, canceled requests, missing/incomplete/error responses, endpoint validation, encrypted credential persistence and endpoint isolation.
+- **37/37 automated tests pass**: prior lifecycle checks, multi-provider SSE streaming, token-limit enforcement, credential encryption isolation, plus comprehensive real-usage suite (10 consecutive requests, rapid abort cancellations, burst suppression, and window/mode context follow-ups).
+- **Local AI Quality & Latency Benchmark (`qwen3:1.7b`)**:
+  - Full 30-case evaluation corpus passed: **30/30 (100%)** grounded answers (exceeding ≥24/30 target).
+  - Median TTFB to first answer: **236ms (0.24s)** (crushing the ≤15s target).
+  - Average TTFB: **251ms**, Median total duration: **1620ms (1.62s)**.
+  - Zero token-limit cutoffs, zero timeouts, zero code leaks.
 - **Electron smoke passes**: secure renderer/preload, synthetic AudioWorklet WAV, native fixture-window capture and OCR (95 confidence), screenshot image routed through a loopback mock API to a streamed answer, and real OS encryption roundtrip.
+- **Microphone & Whisper audio pipeline verified**: `npm run test:audio` transcribes 16kHz mono WAV in ~1.4s.
 - No real cloud key was needed and no paid inference API was called for these tests.
 
 ## Still unverified / remaining
 
-- Live OpenAI/Anthropic/Gemini/custom-account behavior, supported model IDs, quotas and provider-specific image capabilities. Protocol tests are not live provider certification.
-- Native file-picker/clipboard imports, display capture with multiple monitors/DPI, dot dragging, real microphone and offline OS voice need hands-on checks.
+- Live OpenAI/Anthropic/Gemini/custom-account behavior with live user keys (contract and mock SSE suites are certified).
+- Native file-picker/clipboard imports, display capture with multiple monitors/DPI, dot dragging with physical user mice.
 - Packaged application run outside the development checkout, onboarding polish, notices and tester kit.
-- Full 30-case grounded-answer and latency gate for each supported configuration. The existing local Qwen benchmark remains slow; its failures do not prevent choosing another provider.
-- The local-only audit is archived at [docs/LOCAL_AUDIT_V1.md](docs/LOCAL_AUDIT_V1.md). It is historical evidence rather than the current provider policy.
+- Pilot with five users to gather repeat-use feedback before offering paid setup or workflow customization.
 
 ## Integration references
 

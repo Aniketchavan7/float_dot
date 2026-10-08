@@ -5,6 +5,29 @@ function identity(config) {
   if (!PROVIDERS.includes(config.provider) || config.provider === 'ollama') throw new Error('Choose an API provider.');
   return config.provider === 'compatible' ? `compatible:${baseURL(config.baseURL)}` : config.provider;
 }
+async function atomicWrite(targetPath, data) {
+  const tmp = `${targetPath}.${Date.now()}-${Math.random().toString(16).slice(2)}.tmp`;
+  await fs.mkdir(path.dirname(targetPath), { recursive: true });
+  await fs.writeFile(tmp, data, { mode: 0o600 });
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await fs.rename(tmp, targetPath);
+      return;
+    } catch (err) {
+      if ((err.code === 'EPERM' || err.code === 'EBUSY') && attempt < 4) {
+        await new Promise(r => setTimeout(r, 20 * (attempt + 1)));
+        continue;
+      }
+      try {
+        await fs.copyFile(tmp, targetPath);
+        await fs.unlink(tmp).catch(() => {});
+        return;
+      } catch {
+        throw err;
+      }
+    }
+  }
+}
 class CredentialStore {
   constructor(directory, encryption) { this.file = path.join(directory, 'credentials.json'); this.encryption = encryption; this.values = {}; this.queue = Promise.resolve(); }
   async load() {
@@ -25,9 +48,8 @@ class CredentialStore {
     const encrypted = key ? this.encryption.encryptString(key.trim()).toString('base64') : null;
     const task = this.queue.then(async () => {
       const next = { ...this.values }; if (encrypted) next[id] = encrypted; else delete next[id];
-      await fs.mkdir(path.dirname(this.file), { recursive: true });
-      await fs.writeFile(this.file + '.tmp', JSON.stringify(next), { mode: 0o600 });
-      await fs.rename(this.file + '.tmp', this.file); this.values = next;
+      await atomicWrite(this.file, JSON.stringify(next));
+      this.values = next;
     });
     this.queue = task.catch(() => {}); return task;
   }
