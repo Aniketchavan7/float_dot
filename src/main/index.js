@@ -302,15 +302,28 @@ function configureSession() {
 }
 function createWindows() {
   const bounds = screen.getPrimaryDisplay().workArea;
+  const width = 480;
+  const height = Math.min(800, bounds.height - 40);
+  const x = Math.max(bounds.x + 10, bounds.x + bounds.width - width - 24);
+  const y = Math.max(bounds.y + 10, bounds.y + 24);
+
   panel = new BrowserWindow({
-    width: 480, height: Math.min(800, bounds.height - 40), minWidth: 380, minHeight: 460,
-    x: bounds.x + bounds.width - 500, y: bounds.y + 20, title: 'Float Dot', show: !smoke, alwaysOnTop: true,
-    frame: false, transparent: true, hasShadow: true, autoHideMenuBar: true,
+    width, height, minWidth: 380, minHeight: 460,
+    x, y, title: 'Float Dot', show: !smoke, alwaysOnTop: true,
+    frame: false, transparent: true, hasShadow: false, thickFrame: false, autoHideMenuBar: true,
+    backgroundColor: '#00000000',
     webPreferences: { preload: path.join(root, 'src/preload/index.js'), nodeIntegration: false, contextIsolation: true, sandbox: true, backgroundThrottling: false }
   });
+  panel.setAlwaysOnTop(true);
+  panel.setVisibleOnAllWorkspaces(true);
+
   dot = new BrowserWindow({ width: 84, height: 84, x: bounds.x + bounds.width - 104, y: bounds.y + bounds.height - 124,
     title: 'Float Dot · voice', frame: false, transparent: true, resizable: false, skipTaskbar: true, alwaysOnTop: true, show: false,
+    backgroundColor: '#00000000', hasShadow: false,
     webPreferences: { preload: path.join(root, 'src/preload/index.js'), nodeIntegration: false, contextIsolation: true, sandbox: true } });
+  dot.setAlwaysOnTop(true);
+  dot.setVisibleOnAllWorkspaces(true);
+
   for (const win of [panel, dot]) {
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     win.webContents.on('will-navigate', event => event.preventDefault());
@@ -318,10 +331,19 @@ function createWindows() {
   panel.on('close', () => { cancel(); quitting = true; app.quit(); });
   panel.loadURL('floatdot://app/index.html');
   dot.loadURL('floatdot://app/index.html#dot');
-  if (!smoke) {
-    panel.show();
-    panel.focus();
-  }
+
+  const showPanel = () => {
+    if (!smoke && panel && !panel.isDestroyed()) {
+      if (panel.isMinimized()) panel.restore();
+      panel.show();
+      panel.focus();
+      panel.setAlwaysOnTop(true);
+    }
+  };
+  panel.once('ready-to-show', showPanel);
+  panel.webContents.once('did-finish-load', showPanel);
+  setTimeout(showPanel, 600);
+
   screen.on('display-removed', () => {
     const area = screen.getPrimaryDisplay().workArea;
     panel.setPosition(area.x + 20, area.y + 20); dot.setPosition(area.x + area.width - 104, area.y + area.height - 124);
@@ -330,7 +352,13 @@ function createWindows() {
   const trayPixels = Buffer.from(Array.from({ length: 16 * 16 }, () => [44, 76, 166, 255]).flat());
   tray = new Tray(nativeImage.createFromBitmap(trayPixels, { width: 16, height: 16 }));
   tray.setToolTip('Float Dot');
-  const show = () => { dot.hide(); panel.show(); };
+  const show = () => {
+    if (panel.isMinimized()) panel.restore();
+    dot.hide();
+    panel.show();
+    panel.focus();
+    panel.setAlwaysOnTop(true);
+  };
   tray.on('click', show);
   tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open Float Dot', click: show }, { label: 'Quit', click: () => app.quit() }]));
 }
@@ -421,6 +449,14 @@ else app.whenReady().then(async () => {
   await settings.load(); await credentials.load(); configureSession(); installIPC(); createWindows();
   if (smoke) await smokeTest();
 }).catch(error => { console.error(error.message); app.exit(1); });
-app.on('second-instance', () => { if (panel) { dot.hide(); panel.show(); panel.focus(); } });
+app.on('second-instance', () => {
+  if (panel) {
+    if (panel.isMinimized()) panel.restore();
+    dot.hide();
+    panel.show();
+    panel.focus();
+    panel.setAlwaysOnTop(true);
+  }
+});
 app.on('before-quit', () => { if (!quitting) { quitting = true; cancel(); } globalShortcut.unregisterAll(); });
 app.on('window-all-closed', () => app.quit());
