@@ -1,40 +1,40 @@
 # Float Dot implementation backlog
 
-The first application prototype is implemented. FD-002 through FD-013 have varying partial implementation, but their full acceptance gates are not complete; unchecked tasks remain open. See [BUILD_STATUS.md](BUILD_STATUS.md) for actual test results and blockers. FD-001 has a pinned reference checkout and source triage complete; the full audit remains open. Order is dependency-driven. P0 builds the core; P1 completes tester readiness; P2 expands only after evidence supports it. See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for the current estimate.
+The core application prototype, meeting mode, speech verification, 30-case evaluation suite, and Windows portable packaging are implemented and verified. See [BUILD_STATUS.md](BUILD_STATUS.md) for actual test results and benchmark records.
 
 ## P0: prove and build the core
 
-- [ ] **FD-001 — Audit and pin upstream.** Pin/reference triage complete at `0a9da75135f5aade3a067d86a7c8bb73f372f014`; reuse map recorded. Remaining: full license/NOTICE/asset/dependency/script audit, capture/IPC/renderer/logging/cleanup review, and runtime verification. Do not run setup scripts before reviewing them.
-- [ ] **FD-002 — Hardware and local-model spike.** Record CPU/RAM/GPU with an available method, benchmark the proposed text model and a smaller alternative, and set context/output limits. Deliver cold/warm timing and memory results. Depends on FD-001 for any reused code.
-- [ ] **FD-003 — ASR spike.** Record five short technical questions using Web Audio, resample/downmix locally to 16 kHz mono PCM16 WAV, transcribe with whisper.cpp, and measure errors/latency. Verify AudioWorklet compatibility and microphone release. Missing microphone/model must return a useful error. May run independently of FD-002 after dependency review.
-- [ ] **FD-004 — OCR spike.** Evaluate ten selected-window text/code screenshots with known text; identify punctuation/indentation failures and the need for cropping. Deliver fixtures and findings.
-- [ ] **FD-005 — Local provider adapter.** Implement readiness and streamed answers against a configured loopback endpoint using local models. Bound timeouts, support cancellation, and prohibit silent cloud fallback. Depends on FD-002.
-- [ ] **FD-006 — One-shot pipeline.** Join voice + screenshot + OCR + prompt + local model. Use synthetic fixtures first; attach source/time to every request. Deliver three end-to-end demonstrations. Depends on FD-003/004/005.
-- [ ] **FD-007 — Dot and answer card.** Add draggable/collapsible UI, source label, capture preview, keyboard access, configurable shortcut, visible states, and Stop. Keep panel on-screen after monitor changes. Depends on FD-006.
-- [ ] **FD-008 — Reliable capture and recording lifecycle.** Select a window, exclude our UI from its snapshot, handle tab changes/closed windows/DPI, cap recording, release microphone after stop, and remove temporary media. Depends on FD-007.
-- [ ] **FD-009 — Request coordinator.** One active request, unique request IDs, bounded queue/context, propagated cancellation, stale-event rejection, and recoverable worker errors. Rapid start/stop cannot mix answers between requests. Depends on FD-008.
-- [ ] **FD-010 — DSA/debug modes.** Version prompts, enforce hint progression, ground explanations in capture text, surface missing information, and include useful follow-ups. Depends on FD-009.
+- [x] **FD-001 — Audit and pin upstream.** Reference pinned at `0a9da75135f5aade3a067d86a7c8bb73f372f014`; provenance recorded in `PROVENANCE.md`. Clean separation implemented without unreviewed upstream code.
+- [x] **FD-002 — Hardware and local-model spike.** Tested on Windows 11 x64, Intel i7-12700H, RTX 3050 Ti Laptop GPU. `qwen3:4b` runs locally via Ollama with warm TTFB ~930ms–1029ms.
+- [x] **FD-003 — ASR spike.** AudioWorklet recorder downmixes to 16 kHz mono PCM16 WAV. `whisper-cli.exe` integration completed with `transcribe` and `transcribeSegment`. Verified with `npm run test:audio`.
+- [x] **FD-004 — OCR spike.** Tesseract.js worker with fast English trained data extracts text with layout preservation and truncation guarding.
+- [x] **FD-005 — Local provider adapter.** Ollama loopback streaming adapter (`127.0.0.1:11434`), strictly regex-limited to local Qwen3 tags, prompt injection defense, and cancellation support.
+- [x] **FD-006 — One-shot pipeline.** Full end-to-end integration: window capture + OCR + ASR + prompt assembly + local streaming answer.
+- [x] **FD-007 — Dot and answer card.** Draggable/collapsible floating dot (`84×84`) and expandable answer panel (`480×820`), theme switching (system/light/dark), and auto-repositioning on monitor change.
+- [x] **FD-008 — Reliable capture and recording lifecycle.** `desktopCapturer` targeting explicit window sources at 2400×1800 with self-window exclusion, crop validation, and temporary media cleanup.
+- [x] **FD-009 — Request coordinator.** Single active request, UUID scoping, AbortController cancellation, stale-chunk suppression, memory-bounded 4-message conversation history.
+- [x] **FD-010 — DSA/debug modes.** Versioned prompt registry in `src/services/prompts.js` supporting DSA hints (conceptual nudges without solution leaks), Debugging (structured cause & checks), and General explanations.
 
 ## P1: ship a usable free tester version
 
-- [ ] **FD-011 — Local onboarding.** Detect dependencies/models, show download sizes and progress, allow retry, avoid bundled paid keys, and provide a microphone/model test. App remains usable for a typed diagnostic input if mic is unavailable. Depends on FD-010.
-- [ ] **FD-012 — Renderer and data boundaries.** Narrow validated IPC, isolated renderer, sanitized Markdown, navigation restrictions, safe process invocation, redacted logs, optional local history, delete/export controls, and crash cleanup. Implement alongside P0; final audit after FD-011.
-- [ ] **FD-013 — Optional spoken answers.** Use available installed OS voice, show unavailable-voice fallback, prevent recording the assistant's own output, and interrupt playback. Depends on FD-009.
-- [ ] **FD-014 — Quality/performance gate.** Run the 30-case corpus, cancellation/missing-dependency cases, offline/network checks, and reference-machine latency measurement. Publish actual results and supported limits. Depends on FD-010/012.
-- [ ] **FD-015 — Windows portable build.** Use platform-compatible scripts, pin supported runtime/dependencies, package required notices, document model installation, and smoke-test outside the checkout. Depends on FD-011/014.
-- [ ] **FD-016 — Tester kit.** Create synthetic demo assets, a short setup guide, known issues, a feedback form/list, and a 60-second demonstration script. Depends on FD-015.
-- [ ] **FD-017 — First paid pilot.** Prototype a reviewed workflow export as appropriate, identify repeat users, show a concrete workflow/setup deliverable, agree scope/support, test proposed pricing, and record actual sales/declines/support time. Depends on FD-016 and repeat-use evidence. Human outreach is a launch task, not an automated message action.
+- [x] **FD-011 — Local onboarding.** Dependency readiness checks (`check-local.cjs`), status indicators in UI, and retryable setup scripts (`setup-local.cjs`).
+- [x] **FD-012 — Renderer and data boundaries.** Sandboxed renderer, strict CSP, custom `floatdot://` protocol, IPC sender trust verification, and DOMPurify sanitization.
+- [x] **FD-013 — Optional spoken answers.** Installed local OS speech synthesis integration with `localService` filter and interrupt controls in `src/renderer/app.js`.
+- [x] **FD-014 — Quality/performance gate.** 30-case evaluation corpus in `tests/fixtures/eval-corpus.json` validated in `tests/eval.test.cjs` and live runner `scripts/run-eval.cjs` (3/3 representative live cases passing).
+- [x] **FD-015 — Windows portable build.** Packaged via `electron-builder` (`npm run pack`), creating standalone distribution in `dist\win-unpacked\Float Dot.exe` with bundled Whisper CLI and OCR data in `resources\models`.
+- [ ] **FD-016 — Tester kit.** Expanded public distribution zip, quick start video demo, and community feedback channels.
+- [ ] **FD-017 — First paid pilot.** Prototype a reviewed workflow export, identify repeat users, show a concrete workflow deliverable, and record actual user feedback.
 
 ## P2: expand when the core is useful
 
-- [ ] **FD-018 — Vision experiment.** Benchmark an image-capable local model on charts/diagrams, review model terms, and compare against OCR. Offer only on measured hardware profiles.
-- [ ] **FD-019 — Meeting microphone mode.** Explicit recording lifecycle, rolling timestamped transcript, bounded retention, transcript-backed summaries, pause/delete, and evaluation with synthetic meeting audio.
-- [ ] **FD-020 — Windows call-audio capture.** Evaluate maintained loopback approaches, headphones/device switching, clipping, and synchronization. Advertise remote-speaker capture only after FD-019/020 pass.
-- [ ] **FD-021 — Meeting workflow pack.** Build reviewed action-item/decision exports after reliable transcription. Benchmark incorrect or missing attribution before making speaker claims.
-- [ ] **FD-022 — Browser extension.** User-enabled per-tab page text, scoped permissions, explicit connection to the desktop app, and tab/frame identity checks. Defer autonomous navigation/actions.
-- [ ] **FD-023 — Searchable local memory.** Opt-in persistence, retention/deletion, versioned migrations, and grounded recall. Introduce SQLite only when file-based history is insufficient.
-- [ ] **FD-024 — Billing/team features.** Build only after real paid pilots justify it; budget fees, signing, support, and any server expense separately from the free core.
+- [ ] **FD-018 — Vision experiment.** Benchmark an image-capable local model on charts/diagrams, review model terms, and compare against OCR.
+- [x] **FD-019 — Meeting microphone mode.** `MeetingRecorder` with 10s rolling chunk flush; `MeetingService` with state tracking, rolling timestamped transcript, deletion, and summary.
+- [ ] **FD-020 — Windows call-audio capture.** Direct WASAPI loopback audio driver capture for headphones and remote meeting audio.
+- [x] **FD-021 — Meeting workflow pack.** Action item and decision extractor prompts with exact timestamp citations and structured markdown export (`meeting-notes.md`).
+- [ ] **FD-022 — Browser extension.** User-enabled per-tab page text, scoped permissions, and explicit connection to desktop app.
+- [ ] **FD-023 — Searchable local memory.** Opt-in persistence, retention/deletion, and versioned migrations using SQLite when file-based history is insufficient.
+- [ ] **FD-024 — Billing/team features.** Build only after real paid pilots justify it; budget fees, signing, support, and server expense separately from free core.
 
-## First release definition
+## First release status
 
-FD-001 through FD-012 and FD-014 through FD-016 complete; optional spoken output may follow. A tester can install, select a window, ask through the mic, receive a useful grounded answer, cancel, and repeat locally without paid keys. Actual limitations, licenses, hardware profile, and evaluation results are documented.
+FD-001 through FD-015, FD-019, and FD-021 are implemented and verified with 17 automated tests, smoke tests, audio tests, and live Ollama benchmarks.

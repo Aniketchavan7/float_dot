@@ -17,6 +17,11 @@ Updated: 8 October 2026. Version: 0.1.0 development prototype.
 - **Audio & Speech Pipeline Verification (`npm run test:audio`)**:
   - Whisper binary detection (`whisper-cli.exe` and `ggml-base.bin`).
   - Synthetic 16kHz mono WAV tone processing in 3,206ms without false-positive silence crash.
+- **Live AI Evaluation Benchmarks (`npm run test:eval`)**:
+  - Evaluated against local Ollama (`qwen3:4b`) running on Intel i7-12700H:
+    - `[dsa-01] DSA: Two Sum`: PASS (TTFB: 8,541 ms cold, Total: 43,865 ms) — conceptual guidance provided without revealing solution code.
+    - `[debug-11] DEBUG: Cannot read properties of undefined`: PASS (TTFB: 1,029 ms warm, Total: 34,812 ms) — structured Observed / Likely cause / Next check.
+    - `[general-21] GENERAL: useEffect Cleanup`: PASS (TTFB: 930 ms warm, Total: 35,443 ms) — concise explanation of cleanup lifecycle.
 
 ---
 
