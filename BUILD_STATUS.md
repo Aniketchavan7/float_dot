@@ -13,7 +13,7 @@ Updated 9 October 2026 for PRD v2.0 and Shipping Plan.
 - **M06 Providers & Model Compatibility**: Model capabilities inspection (`src/services/capabilities.js`), 1-token explicit connection test with latency measurement (`testConnection`), structured error categorization (auth, quota, rate-limit, context length), immutable request snapshotting in `Coordinator` (`ask`), and Settings UI capability badges.
 - **M07 First-Run Onboarding & Settings UI**: Extracted `SettingsView` (`src/renderer/settings-view.js`), interactive First-Run Onboarding Wizard (`#onboarding-wizard`), plain-language data flow disclosure (Local vs Cloud BYOK), shortcut cheatsheet, and welcome guide button.
 - **M08 Reliability, Hardening & Security**: Gold-standard IPC sender validation (`trust(event)`), sanitized diagnostic export (`fd:export-diagnostics`), zero sensitive data leakage, and 100-cycle soak test (`scripts/soak-test.cjs` / `npm run test:soak`) with bounded heap memory and zero leaks.
-- **M09 Packaging & Distribution**: `electron-builder` configuration producing standalone `dist/win-unpacked/Float Dot.exe` with bundled speech models and ASAR unpacking.
+- **M09 Packaging & Distribution**: `electron-builder` configuration producing standalone portable `dist/Float Dot 0.1.0.exe` (240 MB) and unpacked directory `dist/win-unpacked/Float Dot.exe` with bundled speech models and ASAR unpacking.
 - **M10 Pilot Launch Kit**: Complete 5-user, 7-day testing protocol and feedback template in `docs/PILOT_GUIDE.md`.
 
 ## Verification Evidence
@@ -22,12 +22,14 @@ Updated 9 October 2026 for PRD v2.0 and Shipping Plan.
 - **Fixture validation passing**: 6/6 fixture states verified offline without live models via `npm run test:fixtures`.
 - **Soak test passing (`npm run test:soak`)**: 100 rapid request/cancel cycles executed with 0 resource leaks, clean cancellation, and bounded memory (0.48 MB heap delta).
 - **Electron smoke passing (`npm run smoke`)**: native windows (100 collapse cycles, 0 focus theft), audio worklet, window capture OCR, provider loopback streaming with image, structured answer markdown rendering, voice follow-up review, and OS credential encryption.
-- **Packaging verified (`npm run pack`)**: Successfully built `dist/win-unpacked/Float Dot.exe` (246 MB) with all required runtime dependencies, speech binaries, and native bindings.
+- **Packaging verified (`npm run pack` & `npm run build:win`)**: Successfully built both unpacked directory `dist/win-unpacked/Float Dot.exe` (246 MB) and standalone single-file portable `dist/Float Dot 0.1.0.exe` (240 MB) with all required runtime dependencies, speech binaries, and native bindings.
 - **Microphone & Whisper audio pipeline verified**: `npm run test:audio` transcribes 16kHz mono WAV in ~1.4s.
+- **Launchers created**: `run.bat` for live dev mode and `run-portable.bat` for launching the standalone binary.
 - No real cloud key was needed and no paid inference API was called for automated verification.
 
 ## Pilot Launch Readiness
 
 - Pilot testing documentation is ready in `docs/PILOT_GUIDE.md`.
 - First-run experience is fully self-guided via the onboarding wizard.
-- Packaged binary is available in `dist/win-unpacked/Float Dot.exe`.
+- Standalone portable binary is available in `dist/Float Dot 0.1.0.exe`.
+- Unpacked binary is available in `dist/win-unpacked/Float Dot.exe`.
