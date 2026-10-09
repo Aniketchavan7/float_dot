@@ -90,9 +90,18 @@ Float Dot supports two flexible setups:
 
 ### 4. Running the App
 
+You can launch Float Dot either via npm or using the Windows launchers:
+
 ```powershell
-# Start Float Dot
+# Development / Live code:
 npm start
+# or double-click:
+run.bat
+
+# Standalone Portable executable (zero dependencies):
+run-portable.bat
+# or launch directly from:
+dist\"Float Dot 0.1.0.exe"
 ```
 
 ---
