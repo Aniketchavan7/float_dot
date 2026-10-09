@@ -1,0 +1,100 @@
+{
+  "idle": {
+    "state": "idle",
+    "statusText": "Ready · Press Read screen or ask with voice",
+    "selectedSource": "screen:default",
+    "intent": "explain",
+    "model": "qwen3:1.7b",
+    "provider": "ollama"
+  },
+  "recording": {
+    "state": "recording",
+    "recordingId": "rec-f89a1c24-5d9b-4e08-98e3-0d29ab990142",
+    "statusText": "Listening… Click Stop when finished",
+    "durationSec": 4.2,
+    "energyLevel": 0.65
+  },
+  "capturing": {
+    "state": "capturing",
+    "sourceId": "screen:default",
+    "statusText": "Reading screen and extracting text…",
+    "captureContext": {
+      "id": "cap-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "sourceId": "screen:default",
+      "name": "Entire Screen",
+      "capturedAt": "2026-10-09T00:30:00.000Z",
+      "preview": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "dimensions": { "width": 1920, "height": 1080 },
+      "text": "function calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}",
+      "quality": { "confidence": 98.5, "truncated": false },
+      "imageMode": false
+    }
+  },
+  "answering": {
+    "state": "answering",
+    "requestId": "req-98765432-10fe-dcba-9876-543210fedcba",
+    "contextId": "cap-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "question": "What does this code do and what are potential edge cases?",
+    "startedEvent": {
+      "type": "started",
+      "requestId": "req-98765432-10fe-dcba-9876-543210fedcba",
+      "capturedAt": "2026-10-09T00:30:00.000Z"
+    },
+    "deltaEvents": [
+      {
+        "type": "delta",
+        "requestId": "req-98765432-10fe-dcba-9876-543210fedcba",
+        "delta": "### Summary\n- Sums the `price` property of all items in an array using `Array.prototype.reduce`.\n\n"
+      },
+      {
+        "type": "delta",
+        "requestId": "req-98765432-10fe-dcba-9876-543210fedcba",
+        "delta": "### Edge Cases\n- **Empty array:** returns `0` correctly because initial value `0` is provided.\n- **Missing `price` property:** returns `NaN` if any item lacks numeric `price`.\n- **Null or undefined items:** throws `TypeError: Cannot read properties of undefined`.\n\n### Fix Recommendation\nUse optional chaining or fallback:\n```javascript\nconst price = Number(item?.price) || 0;\n```"
+      }
+    ]
+  },
+  "completion": {
+    "type": "done",
+    "state": "done",
+    "requestId": "req-98765432-10fe-dcba-9876-543210fedcba",
+    "turn": 1,
+    "answer": "### Summary\n- Sums the `price` property of all items in an array using `Array.prototype.reduce`.\n\n### Edge Cases\n- **Empty array:** returns `0` correctly because initial value `0` is provided.\n- **Missing `price` property:** returns `NaN` if any item lacks numeric `price`.\n- **Null or undefined items:** throws `TypeError: Cannot read properties of undefined`.\n\n### Fix Recommendation\nUse optional chaining or fallback:\n```javascript\nconst price = Number(item?.price) || 0;\n```",
+    "warnings": []
+  },
+  "incomplete_output": {
+    "type": "done",
+    "state": "done",
+    "requestId": "req-11223344-5566-7788-99aa-bbccddeeff00",
+    "turn": 2,
+    "answer": "### Partial Analysis\n- The algorithm traverses the graph using depth-first search.\n- Recursion stack might overflow on deep graphs because",
+    "warnings": [
+      "The response reached model token limits before completing. Click Ask follow-up or select a larger model context."
+    ]
+  },
+  "recoverable_failures": [
+    {
+      "type": "error",
+      "requestId": "req-e1",
+      "message": "Start Ollama to use local models or check connection.",
+      "recoveryAction": "start-ollama"
+    },
+    {
+      "type": "error",
+      "requestId": "req-e2",
+      "message": "API key required. Save your API key in AI settings to continue.",
+      "recoveryAction": "check-settings"
+    },
+    {
+      "type": "error",
+      "requestId": "req-e3",
+      "message": "No speech detected in audio. Please speak clearly into the microphone.",
+      "recoveryAction": "retry-voice"
+    },
+    {
+      "type": "error",
+      "requestId": "req-e4",
+      "message": "Selected screen or window is minimized or unavailable.",
+      "recoveryAction": "refresh-windows"
+    }
+  ]
+}

@@ -38,7 +38,7 @@ test('DSA evaluation cases include first-hint prompt constraints', () => {
     assert.equal(messages[0].role, 'system');
     assert.match(messages[0].content, /Current hint level: 0/);
     assert.match(messages[0].content, /Do not reveal full code or the complete algorithm/);
-    assert.equal(messages.at(-1).content, c.spokenQuestion);
+    assert.equal(messages.at(-1).content.split('\n\nResponse format:')[0], c.spokenQuestion);
   }
 });
 
@@ -51,8 +51,8 @@ test('Debug evaluation cases include structured-analysis prompt instructions', (
       context: { id: c.id, text: c.screenText, capturedAt: '2026-10-08T00:00:00Z' }
     });
 
-    assert.match(messages[0].content, /Explain the visible error/);
-    assert.match(messages[0].content, /Observed, Likely cause, and Next check/);
-    assert.match(messages[0].content, /Show commands only as suggestions/);
+    assert.match(messages[0].content, /Quote the exact visible error/);
+    assert.match(messages[0].content, /### Observed, ### Likely cause, ### Next check/);
+    assert.match(messages[0].content, /Commands are suggestions, never executed/);
   }
 });

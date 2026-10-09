@@ -256,7 +256,7 @@
     "id": "general-28",
     "mode": "general",
     "name": "Node.js Event Loop Microtasks",
-    "screenText": "setTimeout(() => console.log('timeout'), 0);\nPromise.resolve().then(() => console.log('promise'));\nprocess.nextTick(() => console.log('nextTick'));",
+    "screenText": "Node.js CommonJS (.cjs), at top level:\nsetTimeout(() => console.log('timeout'), 0);\nPromise.resolve().then(() => console.log('promise'));\nprocess.nextTick(() => console.log('nextTick'));",
     "spokenQuestion": "Which log statement prints first?",
     "requiredKeywords": ["nextTick", "microtask", "before"],
     "expectedBehavior": "Explains process.nextTick executes before promise microtasks and setTimeout timers"

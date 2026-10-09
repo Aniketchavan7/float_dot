@@ -2,6 +2,8 @@
 
 Version 2.0 · 8 October 2026 · Windows desktop application
 
+Planning update, 9 October: the [shipping plan](docs/SHIPPING_PLAN.md) supersedes this document's launch-surface and release-priority assumptions. The proposed v1 uses a compact toolbar/optional dot, an on-demand answer card, separate settings, and a Windows 11 x64 release target. Meeting features are deferred from the default v1 experience. Existing requirements below describe the earlier prototype scope.
+
 This revision follows the owner's clarified scope: a floating desktop icon that reads a requested screenshot/window/display and explains it using the user's chosen AI provider. It supersedes the local-only requirements in [the archived v1 PRD](docs/PRD_LOCAL_V1.md). Implementation evidence is in [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## Product and core experience

@@ -1,10 +1,15 @@
 import { Recorder, MeetingRecorder } from './audio.js';
+import { OverlayController } from './overlay.js';
+import { AnswerView } from './answer-view.js';
+import { VoiceController, wantsFreshScreen } from './voice-controller.js';
+import { SettingsView } from './settings-view.js';
+
 const api = window.floatDot;
 const $ = id => document.getElementById(id);
-let mode = 'dsa', context = null, answer = '', activeRequest = null, epoch = 0, busy = false, micStarting = false;
+let mode = 'general', context = null, answer = '', activeRequest = null, epoch = 0, busy = false, micStarting = false;
 let meetingActive = false, meetingPaused = false, meetingTimer = null, meetingStartEpoch = 0, meetingRequest = null;
 let voiceTimer = null, voiceStartEpoch = 0;
-let preferences = { confirmCapture: true, readAloud: false, theme: 'system', model: 'qwen3:1.7b' };
+let preferences = { confirmCapture: false, readAloud: false, theme: 'system', model: 'qwen3:1.7b' };
 const providerLabels = { ollama: 'Ollama · local', openai: 'OpenAI', anthropic: 'Anthropic', gemini: 'Gemini', compatible: 'Custom API' };
 
 function providerDescription() { return `${providerLabels[preferences.provider] || preferences.provider} · ${preferences.model}`; }
@@ -20,7 +25,10 @@ function providerFields() {
   $('key-field').hidden = choice === 'ollama';
 }
 
-const recorder = new Recorder(() => guarded(record));
+let speechReady = false;
+let reviewReusesCapture = false;
+const voice = new VoiceController({transcribe:wav=>call('transcribe',wav)});
+const recorder = new Recorder(() => guarded(record), e => { ++epoch; voice.cancel(); stopped(); error(e.message); });
 const meetingRecorder = new MeetingRecorder({
   onChunk: async (wav, offsetSec) => {
     try { await call('meetingChunk', { audio: wav, offsetSec }); }
@@ -35,50 +43,56 @@ async function call(method, input) {
   return result.value;
 }
 
+let overlay = null;
+let answerView = null;
+let settingsView = null;
+
 function state(label, kind = 'idle') {
-  $('status-text').textContent = label;
-  document.body.dataset.state = kind;
+  if (overlay) overlay.setState(label, kind);
+  else {
+    $('status-text').textContent = label;
+    document.body.dataset.state = kind;
+  }
 }
 
 function error(message) {
-  $('error').textContent = message;
-  $('error').hidden = false;
-  state('Needs attention', 'error');
+  if (overlay) overlay.showError(message);
+  else {
+    $('error').textContent = message;
+    $('error').hidden = false;
+    state('Needs attention', 'error');
+  }
 }
 
 function resetError() {
-  $('error').hidden = true;
+  if (overlay) overlay.hideError();
+  else $('error').hidden = true;
 }
 
-let renderRaf = null;
+function answerState(label, complete = false) {
+  if (answerView) answerView.setState(label, complete);
+  else {
+    $('answer-state').textContent = label;
+    $('answer-state').dataset.complete = String(complete);
+    for (const id of ['copy', 'export', 'speak']) $(id).disabled = !complete;
+  }
+}
 
 function renderAnswer(isFinal = false) {
-  if (!answer) {
-    $('answer').innerHTML = '';
-    return;
-  }
-  const html = window.marked.parse(answer, { breaks: true });
-  $('answer').innerHTML = window.DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'pre', 'code', 'h1', 'h2', 'h3', 'blockquote', 'hr'],
-    ALLOWED_ATTR: ['class']
-  });
-  $('answer').scrollTop = $('answer').scrollHeight;
-  if (isFinal) {
-    window.Prism?.highlightAllUnder($('answer'));
+  if (answerView) answerView.render(answer, isFinal);
+  else {
+    if (!answer) { $('answer').innerHTML = ''; return; }
+    const html = window.marked.parse(answer, { breaks: true });
+    $('answer').innerHTML = window.DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'pre', 'code', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+      ALLOWED_ATTR: ['class']
+    });
+    if (isFinal && window.Prism) window.Prism.highlightAllUnder($('answer'));
   }
 }
 
 function scheduleRender(isFinal = false) {
-  if (isFinal) {
-    if (renderRaf) { cancelAnimationFrame(renderRaf); renderRaf = null; }
-    renderAnswer(true);
-    return;
-  }
-  if (renderRaf) return;
-  renderRaf = requestAnimationFrame(() => {
-    renderRaf = null;
-    renderAnswer(false);
-  });
+  renderAnswer(isFinal);
 }
 
 function lock(value) {
@@ -87,7 +101,6 @@ function lock(value) {
   $('capture').disabled = value;
   $('record').disabled = value;
   $('confirm').disabled = value;
-  $('follow-up').disabled = value;
   $('source').disabled = value;
   $('refresh-windows').disabled = value;
   $('stop').hidden = !value;
@@ -97,6 +110,7 @@ function lock(value) {
   $('crop-capture').disabled = value;
   $('open-screenshot').disabled = value;
   $('paste-screenshot').disabled = value;
+  $('snip').disabled = value;
 }
 
 function setVoiceState(status) {
@@ -120,27 +134,27 @@ function setVoiceState(status) {
       const elapsed = Math.floor((Date.now() - voiceStartEpoch) / 1000);
       const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
       const ss = String(elapsed % 60).padStart(2, '0');
-      if (recLabel) recLabel.textContent = `Stop recording (${mm}:${ss})`;
+      if (recLabel) recLabel.textContent = `Stop (${mm}:${ss})`;
     };
     update();
     voiceTimer = setInterval(update, 500);
-    state('Listening to your voice… Click Stop when done', 'recording');
+    state('Listening to voice… Stop when done', 'recording');
   } else if (status === 'transcribing') {
     recBtn?.classList.remove('is-recording');
     recBtn?.classList.add('is-transcribing');
     if (recBtn) recBtn.disabled = true;
-    if (recSymbol) recSymbol.innerHTML = '<span class="spinner"></span>';
-    if (recLabel) recLabel.textContent = 'Transcribing audio…';
+    if (recSymbol) recSymbol.innerHTML = '…';
+    if (recLabel) recLabel.textContent = 'Transcribing…';
     if (recWave) recWave.hidden = true;
     $('capture').disabled = true;
-    $('stop').hidden = true;
-    state('Transcribing audio & analyzing screen…', 'busy');
+    $('stop').hidden = false;
+    state('Transcribing audio…', 'busy');
   } else {
     // idle
     recBtn?.classList.remove('is-recording', 'is-transcribing');
     if (recBtn) recBtn.disabled = false;
     if (recSymbol) recSymbol.textContent = '●';
-    if (recLabel) recLabel.textContent = 'Ask with voice';
+    if (recLabel) recLabel.textContent = 'Voice';
     if (recWave) recWave.hidden = true;
     $('capture').disabled = false;
     $('stop').hidden = true;
@@ -159,6 +173,7 @@ async function guarded(action) {
     resetError();
     await action();
   } catch (e) {
+    if (busy) answerState('Incomplete · check the error and retry');
     lock(false);
     stopped();
     error(e.message);
@@ -167,6 +182,8 @@ async function guarded(action) {
 
 async function refreshStatus() {
   const status = await call('status');
+  speechReady = status.speechReady;
+  $('voice-setup').hidden = speechReady;
   preferences = status.settings;
   mode = preferences.mode;
 
@@ -231,12 +248,46 @@ async function refreshStatus() {
     $('readiness').append(row);
   }
 
-  const ready = rows.slice(0, 2).every(([, value]) => value);
-  $('setup').hidden = ready;
+  const ready = settingsView ? settingsView.refresh(status) : rows.slice(0, 2).every(([, value]) => value);
+  if (!settingsView) $('setup').hidden = ready;
   state(ready ? 'Ready · Entire screen' : 'Setup needed · open AI settings');
+
+  renderCapabilities(status.capabilities);
 
   if (status.modelError) error(status.modelError);
   if (status.shortcutError) error(status.shortcutError);
+}
+
+function renderCapabilities(caps) {
+  const container = $('capability-badges');
+  if (!container) return;
+  container.replaceChildren();
+  if (!caps) return;
+
+  if (caps.isLocal) {
+    const b = document.createElement('span');
+    b.className = 'cap-badge success';
+    b.textContent = '🔒 Local · Private';
+    container.appendChild(b);
+  }
+  if (caps.supportsVision) {
+    const b = document.createElement('span');
+    b.className = 'cap-badge active';
+    b.textContent = '🖼️ Vision Supported';
+    container.appendChild(b);
+  }
+  if (caps.supportsReasoning) {
+    const b = document.createElement('span');
+    b.className = 'cap-badge active';
+    b.textContent = '🧠 Reasoning Model';
+    container.appendChild(b);
+  }
+  if (caps.isEmbedding) {
+    const b = document.createElement('span');
+    b.className = 'cap-badge warning';
+    b.textContent = '⚠️ Embedding Only (Incompatible)';
+    container.appendChild(b);
+  }
 }
 
 function setTheme() {
@@ -245,9 +296,10 @@ function setTheme() {
 }
 
 function setModeButtons() {
-  document.querySelectorAll('[data-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
+  document.querySelectorAll('[data-mode]').forEach(button => {
+    button.classList.toggle('active', button.dataset.mode === mode);
+  });
   const isMeeting = mode === 'meeting';
-  if ($('window-inputs')) $('window-inputs').hidden = isMeeting;
   if ($('meeting-inputs')) $('meeting-inputs').hidden = !isMeeting;
 }
 
@@ -269,27 +321,31 @@ async function refreshWindows() {
     }
   });
 
-  if (previous && windows.some(win => win.id === previous)) {
+  if (previous && previous !== 'screen:default' && !windows.some(win => win.id === previous)) {
+    $('source').add(new Option('Previously selected source (unavailable)', previous));
+    $('source').value = previous;
+  } else if (previous && windows.some(win => win.id === previous)) {
     $('source').value = previous;
   } else {
     $('source').value = 'screen:default';
   }
 }
 
-async function prepare(audio, crop, openScreenshot = false) {
+async function prepare(audio, crop, openScreenshot = false, region = false) {
+  reviewReusesCapture=false;
   const sourceId = $('source').value || 'screen:default';
   const version = ++epoch;
   lock(true);
-  state(audio ? 'Transcribing question & reading screen…' : 'Reading screen…', 'busy');
+  state(audio ? 'Transcribing & reading screen…' : 'Reading screen…', 'busy');
 
   context = null;
-  $('answer-section').hidden = true;
+  if (answerView) answerView.hide();
+  else $('answer-section').hidden = true;
   $('capture-review').hidden = true;
-  $('empty').hidden = true;
 
   let captured;
   try {
-    captured = await call('prepare', { sourceId, question: $('question').value, audio, crop, openScreenshot });
+    captured = await call('prepare', { sourceId, question: $('question').value, audio, crop, openScreenshot, region });
   } catch (e) {
     setVoiceState('idle');
     if (version !== epoch) return;
@@ -300,17 +356,20 @@ async function prepare(audio, crop, openScreenshot = false) {
   if (version !== epoch) return;
   if (!captured) {
     lock(false);
-    $('empty').hidden = false;
     state('No screenshot selected');
     return;
   }
 
   context = captured;
   $('question').value = captured.transcript;
+  $('review-question').value = captured.transcript;
   $('preview').src = captured.preview;
   $('capture-meta').textContent = `${captured.name} · ${new Date(captured.capturedAt).toLocaleTimeString()} · ${captured.dimensions.width}×${captured.dimensions.height}`;
   $('extracted').textContent = captured.text;
-  $('crop-capture').closest('details').hidden = openScreenshot;
+  $('crop-capture').closest('details').hidden = !!openScreenshot || region;
+  // Review must include the actual preview/evidence, not only a confirm button.
+  $('capture-review').prepend($('evidence-details'));
+  $('evidence-details').open = preferences.confirmCapture;
   $('crop-x').value = 0;
   $('crop-y').value = 0;
   $('crop-width').value = captured.dimensions.width;
@@ -318,7 +377,7 @@ async function prepare(audio, crop, openScreenshot = false) {
   $('ocr-warning').hidden = captured.confidence >= 75 && !captured.truncated;
   $('ocr-warning').textContent = 'Check extracted text. Operators or small code may be misread' + (captured.truncated ? '; only the first part is included.' : '.');
 
-  if (audio || !preferences.confirmCapture) {
+  if (!preferences.confirmCapture) {
     await ask();
   } else {
     $('capture-review').hidden = false;
@@ -328,26 +387,31 @@ async function prepare(audio, crop, openScreenshot = false) {
   }
 }
 
-async function ask() {
+async function ask(customQuestion = null) {
   if (!context) throw new Error('Capture screen or window first.');
-  if (!$('question').value.trim()) throw new Error('Add a question or ask aloud first.');
+  const q = (customQuestion || $('question').value).trim();
+  if (!q) throw new Error('Add a question or ask aloud first.');
 
   lock(true);
   answer = '';
+  answerState('Generating · wait for completion');
   activeRequest = null;
   renderAnswer();
 
-  $('answer-section').hidden = false;
+  const meta = `${providerDescription()} · ${context.name} · ${new Date(context.capturedAt).toLocaleTimeString()}`;
+  if (answerView) answerView.show(meta);
+  else $('answer-section').hidden = false;
+  $('answer-section').append($('evidence-details'));
+  $('evidence-details').open = false;
   $('capture-review').hidden = true;
-  $('empty').hidden = true;
-  $('answer-meta').textContent = `${providerDescription()} · ${context.name} · ${new Date(context.capturedAt).toLocaleTimeString()}`;
   state(`Asking ${providerDescription()}…`, 'busy');
-
-  await call('ask', { question: $('question').value, mode, contextId: context.id });
+  voice.submitted();
+  await call('ask', { question: q, mode, contextId: context.id });
 }
 
 async function sendQuestion() {
-  if (busy) return;
+  if (busy || recorder.active || micStarting) return;
+  voice.cancel();$('voice-timing').hidden=true;
   const q = $('question').value.trim();
   if (!q) {
     await prepare();
@@ -360,57 +424,55 @@ async function sendQuestion() {
   }
 }
 
-function prepareFollowUp() {
-  $('question').value = '';
-  $('question').placeholder = 'Ask a follow-up (e.g. "What is the time complexity?", "Show how to optimize this")…';
-  $('question').focus();
-  $('question').scrollIntoView({ behavior: 'smooth' });
-}
-
 async function record() {
   if (busy) return;
   if (recorder.active) {
-    setVoiceState('transcribing');
     const wav = await recorder.stop();
-
-    if (context && answer && $('reuse-capture').checked) {
-      const version = ++epoch;
-      lock(true);
-      state('Transcribing follow-up · keeping current screen…', 'busy');
-      let transcript;
-      try {
-        transcript = await call('transcribe', wav);
-      } catch (e) {
-        setVoiceState('idle');
-        if (version !== epoch) return;
-        throw e;
-      }
-      if (version !== epoch) { setVoiceState('idle'); return; }
-      setVoiceState('idle');
-      $('question').value = transcript;
-
-      if (/\b(read|capture|look at)\b.*\b(screen|window|display)\b|\b(recapture|new screenshot)\b/i.test(transcript)) {
-        await prepare();
-      } else {
-        await ask();
-      }
+    const version=++epoch;
+    lock(true);setVoiceState('transcribing');
+    const transcript=await voice.recognize(wav);
+    if(version!==epoch || transcript===null)return;
+    lock(false);setVoiceState('idle');
+    $('question').value=transcript;
+    if (context && answer && $('reuse-capture').checked && !wantsFreshScreen(transcript)) {
+      if (preferences.confirmCapture) {
+        reviewReusesCapture=true;
+        $('review-question').value=transcript;
+        $('capture-review').prepend($('evidence-details'));
+        $('evidence-details').open=true;
+        $('capture-review').hidden=false;
+        $('confirm').textContent='Send corrected follow-up';
+        state('Review voice question · reusing captured screen');
+      } else await ask();
     } else {
-      await prepare(wav);
+      await prepare();
     }
     return;
   }
 
   if (micStarting) return;
+  if (!speechReady) {
+    $('setup').hidden=false;
+    throw new Error('Optional voice setup is missing. See Voice setup in AI Settings; typing and Read still work.');
+  }
   window.speechSynthesis?.cancel();
+  const version=++epoch;
+  voice.cancel();
   micStarting = true;
+  lock(true);busy=false;
   $('record').disabled = true;
+  $('stop').hidden=false;
+  state('Opening microphone…','busy');
 
   try {
     await recorder.start(preferences.microphoneId);
+  } catch(e) {
+    if(version!==epoch)return;
+    throw e;
   } finally {
-    micStarting = false;
+    if(version===epoch)micStarting = false;
   }
-
+  if(version!==epoch)return;
   if (!recorder.active) {
     stopped();
     return;
@@ -419,6 +481,8 @@ async function record() {
 }
 
 async function stop() {
+  voice.cancel();
+  if (busy) answerState('Incomplete · stopped');
   ++epoch;
   activeRequest = null;
   meetingRequest = null;
@@ -431,19 +495,21 @@ async function stop() {
 }
 
 async function clear() {
+  $('voice-timing').hidden=true;
   await stop();
   await call('clear');
   context = null;
   answer = '';
-  renderAnswer(true);
-  $('session-badge').hidden = true;
+  if (answerView) answerView.clear();
+  else {
+    renderAnswer(true);
+    $('session-badge').hidden = true;
+    $('answer-section').hidden = true;
+  }
   $('meeting-transcript-list').replaceChildren();
   $('meeting-transcript-section').hidden = true;
-  $('answer-section').hidden = true;
   $('capture-review').hidden = true;
-  $('empty').hidden = false;
   $('question').value = '';
-  $('question').placeholder = 'Ask about your screen, code, or interview problem… (Enter to send, Shift+Enter for newline)';
 }
 
 function readAloud() {
@@ -540,7 +606,8 @@ async function clearMeeting() {
   $('meeting-transcript-list').replaceChildren();
   answer = '';
   renderAnswer();
-  $('answer-section').hidden = true;
+  if (answerView) answerView.hide();
+  else $('answer-section').hidden = true;
   $('meeting-transcript-section').hidden = true;
   state('Meeting session cleared');
 }
@@ -551,10 +618,10 @@ async function summarizeMeeting() {
   meetingRequest = null;
   lock(true);
   answer = '';
+  answerState('Generating meeting notes · wait for completion');
   renderAnswer();
-  $('answer-section').hidden = false;
-  $('empty').hidden = true;
-  $('answer-meta').textContent = `Meeting Summary · ${new Date().toLocaleTimeString()}`;
+  if (answerView) answerView.show(`Meeting Summary · ${new Date().toLocaleTimeString()}`);
+  else $('answer-section').hidden = false;
   state('Extracting decisions and action items…', 'busy');
   try { await call('meetingSummarize'); }
   catch (e) { if (version === epoch) throw e; }
@@ -570,17 +637,49 @@ function on(id, action) {
   if (el) el.addEventListener('click', () => guarded(action));
 }
 
+// Module initialization
 if (location.hash === '#dot') {
   document.body.classList.add('dot-view');
   $('floating-dot')?.addEventListener('click', () => call('expand').catch(() => {}));
 } else {
+  overlay = new OverlayController({
+    onModeChange: () => {}, // The guarded mode handler below owns cancellation and persistence.
+    onOpacityChange: () => {},
+    onSourceChange: () => {}
+  });
+
+  answerView = new AnswerView({
+    onFollowUp: (q, reuse) => {
+      if (busy || recorder.active || micStarting) return;
+      voice.cancel();$('voice-timing').hidden=true;
+      if (reuse && context) {
+        guarded(() => ask(q));
+      } else {
+        $('question').value = q;
+        guarded(() => prepare());
+      }
+    },
+    onCopy: text => {
+      call('copy', text).then(() => state('Answer copied to clipboard'));
+    },
+    onExport: text => {
+      call('export', `# Float Dot note\n\nSource: ${context?.name}\nCaptured: ${context?.capturedAt}\n\n${text}`);
+    },
+    onClear: () => guarded(clear)
+  });
+
   on('send', sendQuestion);
   on('record', record);
   on('stop', stop);
   on('capture', () => prepare());
-  on('confirm', ask);
+  on('confirm', () => {
+    $('question').value=$('review-question').value;
+    if(reviewReusesCapture && wantsFreshScreen($('review-question').value))return prepare();
+    return ask($('review-question').value);
+  });
   on('open-screenshot', () => prepare(undefined, undefined, true));
   on('paste-screenshot', () => prepare(undefined, undefined, 'clipboard'));
+  on('snip', () => prepare(undefined, undefined, false, true));
 
   $('question').addEventListener('keydown', event => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -589,33 +688,19 @@ if (location.hash === '#dot') {
     }
   });
 
-  $('provider').addEventListener('change', () => {
-    providerFields();
-    $('model').value = '';
-    $('api-key').value = '';
-    $('key-status').textContent = 'Save the provider and model to switch.';
+  settingsView = new SettingsView({
+    call,
+    state,
+    error,
+    resetError,
+    onBeforeSave: async () => { await stop(); },
+    onSave: async updated => {
+      preferences = updated;
+      await refreshStatus();
+    },
+    onStatusChange: refreshStatus
   });
-
-  on('save-provider', async () => {
-    await stop();
-    const key = $('api-key').value;
-    $('api-key').value = '';
-    preferences = await call('settings', {
-      provider: $('provider').value,
-      model: $('model').value.trim(),
-      baseURL: $('provider').value === 'compatible' ? $('endpoint').value.trim() : '',
-      sendImage: $('send-image').checked
-    });
-    if (key && preferences.provider !== 'ollama') await call('credentials', { key });
-    await refreshStatus();
-    state(`Provider saved · ${providerDescription()}`);
-  });
-
-  on('remove-key', async () => {
-    if ($('provider').value !== preferences.provider) throw new Error('Save the provider selection first.');
-    await call('credentials', { key: '' });
-    await refreshStatus();
-  });
+  settingsView.init();
 
   on('answer-stop', stop);
   on('crop-capture', () => prepare(undefined, Object.fromEntries(['x', 'y', 'width', 'height'].map(key => [key, Number($('crop-' + key).value)]))));
@@ -636,18 +721,52 @@ if (location.hash === '#dot') {
 
   on('collapse', async () => { await stop(); await call('collapse'); });
   on('close', async () => { await stop(); await call('close'); });
-  on('clear', clear);
   on('discard', clear);
-
-  on('copy', async () => {
-    await call('copy', answer);
-    state('Answer copied to clipboard');
+  on('speak', readAloud);
+  on('settings-toggle', () => {
+    if (settingsView) settingsView.toggle();
+    else $('setup').hidden = !$('setup').hidden;
+    $('overflow-menu').hidden = true;
+  });
+  on('settings-close', () => {
+    if (settingsView) settingsView.hide();
+    else $('setup').hidden = true;
+  });
+  on('hide', async () => { await stop(); await call('hide'); });
+  on('pin', async () => {
+    const pinned = await call('pin', $('pin').getAttribute('aria-pressed') !== 'true');
+    $('pin').setAttribute('aria-pressed', String(pinned));
+    $('pin').textContent = pinned ? 'Pinned on top' : 'Pin on top';
+  });
+  api.onFocusInput(() => $('question').focus());
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    if (busy || recorder.active || micStarting || meetingActive) { event.preventDefault(); guarded(stop); }
+    else if (event.defaultPrevented) return;
+    else if (!$('setup').hidden) { $('setup').hidden = true; event.preventDefault(); }
+    else { event.preventDefault(); guarded(() => call('collapse')); }
   });
 
-  on('export', () => call('export', `# Float Dot note\n\nSource: ${context?.name}\nCaptured: ${context?.capturedAt}\n\n${answer}`));
-  on('speak', readAloud);
-  on('follow-up', prepareFollowUp);
-  on('settings-toggle', () => { $('setup').hidden = !$('setup').hidden; });
+  // Size the native input rectangle to visible UI, not an invisible 800px dashboard.
+  let layoutTimer, lastHeight = 0, layoutRunning = false;
+  async function resizePanel() {
+    if (layoutRunning) return;
+    const height = Math.ceil($('panel').getBoundingClientRect().height + 16);
+    if (height === lastHeight) return;
+    layoutRunning = true; lastHeight = height;
+    try {
+      const result = await call('layout', { height });
+      document.documentElement.style.setProperty('--display-height', `${result.workArea.height}px`);
+      $('pin').setAttribute('aria-pressed', String(result.pinned));
+      $('pin').textContent = result.pinned ? 'Pinned on top' : 'Pin on top';
+    } catch { lastHeight = 0; }
+    finally { layoutRunning = false; }
+  }
+  const scheduleLayout = () => { clearTimeout(layoutTimer); layoutTimer = setTimeout(resizePanel, 40); };
+  new ResizeObserver(scheduleLayout).observe($('panel'));
+  new MutationObserver(scheduleLayout).observe($('panel'), { attributes:true,childList:true,subtree:true,characterData:true });
+  api.onDisplayChanged(() => { lastHeight = 0; scheduleLayout(); });
+  scheduleLayout();
 
   on('meeting-record', startMeeting);
   on('meeting-pause', pauseMeeting);
@@ -663,7 +782,8 @@ if (location.hash === '#dot') {
     context = null;
     answer = '';
     renderAnswer();
-    $('answer-section').hidden = true;
+    if (answerView) answerView.hide();
+    else $('answer-section').hidden = true;
     $('capture-review').hidden = true;
     mode = button.dataset.mode;
     preferences = await call('settings', { mode });
@@ -691,7 +811,6 @@ if (location.hash === '#dot') {
     $('meeting-pause').hidden = true;
     $('meeting-stop').hidden = true;
     micStarting = false;
-    setVoiceState('idle');
     if (!busy) stopped();
   });
 
@@ -703,26 +822,30 @@ if (location.hash === '#dot') {
     }
     if (event.requestId !== activeRequest) return;
     if (event.type === 'delta') {
+      const timings=voice.firstAnswer();
+      if(timings?.firstAnswerMs!==undefined) {
+        $('voice-timing').hidden=false;
+        $('voice-timing').textContent=`Voice: transcription ${Math.round(timings.transcriptionMs)} ms · answer after send ${Math.round(timings.firstAnswerMs)} ms`;
+      }
       answer += event.delta;
       scheduleRender(false);
     }
     if (event.type === 'done') {
+      if (typeof event.answer === 'string') answer = event.answer;
+      answerState(event.warnings?.length ? `Complete · ${event.warnings.join(' ')}` : 'Complete', true);
       lock(false);
       scheduleRender(true);
       state('Answer complete · ready for follow-up');
-      if (event.turn && event.turn > 1) {
-        $('session-badge').textContent = `Turn ${event.turn} · Memory Active`;
-        $('session-badge').hidden = false;
-      } else {
-        $('session-badge').hidden = true;
-      }
+      if (answerView) answerView.setSessionBadge(event.turn || 1);
       if (preferences.readAloud) guarded(readAloud);
     }
     if (event.type === 'error') {
+      answerState('Incomplete · retry or choose a different model');
       lock(false);
       error(event.message);
     }
     if (event.type === 'canceled') {
+      answerState('Incomplete · stopped');
       lock(false);
       state('Answer stopped');
     }
@@ -762,12 +885,14 @@ if (location.hash === '#dot') {
   api.onMeetingSummaryDone(event => {
     if (event.requestId !== meetingRequest) return;
     lock(false);
+    answerState('Complete', true);
     scheduleRender(true);
     state('Meeting summary ready');
   });
   api.onMeetingSummaryError(event => {
     if (event.requestId !== meetingRequest) return;
     lock(false);
+    answerState('Incomplete · meeting notes were not finished');
     error(event.message);
   });
 

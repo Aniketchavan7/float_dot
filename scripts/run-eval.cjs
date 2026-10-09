@@ -3,9 +3,10 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { streamAnswer, listModels } = require('../src/services/model');
 const { buildMessages } = require('../src/services/prompts');
+const { normalizeAnswer, assessAnswer } = require('../src/services/answer-quality');
 
 function median(numbers) {
-  if (!numbers.length) return 0;
+  if (!numbers.length) return null;
   const sorted = [...numbers].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 !== 0 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
@@ -123,7 +124,9 @@ async function run() {
       ttfbList.push(ttfb);
       durationList.push(totalDuration);
 
-      // Check forbidden keywords
+      fullResponse = normalizeAnswer(fullResponse);
+      const quality = assessAnswer({ answer: fullResponse, mode: testCase.mode, question: testCase.spokenQuestion });
+      // Keywords and formatting are screening checks, not proof of correctness.
       let forbiddenViolations = [];
       if (testCase.forbiddenInHint1) {
         forbiddenViolations = testCase.forbiddenInHint1.filter(kw => fullResponse.toLowerCase().includes(kw.toLowerCase()));
@@ -131,7 +134,7 @@ async function run() {
 
       // Check required concepts
       const matchedKeywords = (testCase.requiredKeywords || []).filter(kw => fullResponse.toLowerCase().includes(kw.toLowerCase()));
-      const passed = forbiddenViolations.length === 0 && matchedKeywords.length > 0;
+      const passed = forbiddenViolations.length === 0 && matchedKeywords.length > 0 && quality.structured;
 
       results.push({
         id: testCase.id,
@@ -142,6 +145,8 @@ async function run() {
         totalDurationMs: totalDuration,
         matchedKeywords,
         forbiddenViolations,
+        formatIssues: quality.issues,
+        humanReviewRequired: true,
         response: fullResponse,
         reviewStatus: passed ? 'heuristic-pass' : 'heuristic-fail',
         responseExcerpt: fullResponse.slice(0, 120).replace(/\n/g, ' ') + '...'
@@ -149,6 +154,7 @@ async function run() {
 
       console.log(`${passed ? 'PASS' : 'FAIL'} | TTFB: ${ttfb}ms | Total: ${totalDuration}ms`);
       if (!passed) {
+        for (const issue of quality.issues) console.log(`  -> ${issue}`);
         if (forbiddenViolations.length > 0) {
           console.log(`  -> Forbidden keyword violation: ${forbiddenViolations.join(', ')}`);
         }
@@ -186,11 +192,11 @@ async function run() {
   console.log(`Average TTFB: ${avgTTFB}ms (${(avgTTFB / 1000).toFixed(2)}s)`);
   console.log(`Median Total Duration: ${medianDuration}ms (${(medianDuration / 1000).toFixed(2)}s)`);
 
-  const qualityGateMet = passedCount >= Math.ceil(totalCount * 0.8);
-  const latencyGateMet = medianTTFB <= 15000;
-  console.log(`Quality Target (>= 80%): ${qualityGateMet ? 'MET' : 'NOT MET'}`);
+  const heuristicTargetMet = totalCount > 0 && passedCount >= Math.ceil(totalCount * 0.8);
+  const latencyGateMet = ttfbList.length === totalCount && totalCount > 0 && medianTTFB <= 15000;
+  console.log(`Heuristic screening (>= 80%): ${heuristicTargetMet ? 'MET' : 'NOT MET'}`);
   console.log(`Latency Target (Median TTFB <= 15s): ${latencyGateMet ? 'MET' : 'NOT MET'}`);
-  console.log(`Overall Gate: ${qualityGateMet && latencyGateMet ? 'PASSED' : 'ACTION REQUIRED'}`);
+  console.log('Release quality: NOT CERTIFIED. Review correctness, grounding, hint leakage, and actual screenshot/audio flows.');
 
   const reportDir = path.join(__dirname, '../.artifacts');
   await fs.mkdir(reportDir, { recursive: true });
@@ -198,6 +204,8 @@ async function run() {
     createdAt: new Date().toISOString(),
     model: models.find(m => m.name === model) || { name: model },
     reasoning: options.reasoning,
+    scope: 'Supplied text fixtures only; excludes capture, OCR, microphone, and speech transcription.',
+    humanReviewRequired: true,
     summary: {
       casesRun: totalCount,
       passedCount,
@@ -205,16 +213,17 @@ async function run() {
       medianTTFBMs: medianTTFB,
       avgTTFBMs: avgTTFB,
       medianDurationMs: medianDuration,
-      qualityGateMet,
+      heuristicTargetMet,
+      qualityGateMet: false,
       latencyGateMet,
-      overallGatePassed: qualityGateMet && latencyGateMet
+      overallGatePassed: false
     },
     results
   }, null, 2));
 
   console.log(`\nFull report saved to: ${path.join(reportDir, 'evaluation-report.json')}`);
 
-  if (!qualityGateMet || !latencyGateMet) {
+  if (!heuristicTargetMet || !latencyGateMet) {
     process.exitCode = 1;
   }
 }

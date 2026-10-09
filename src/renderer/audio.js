@@ -18,30 +18,49 @@ export function encodeWav(chunks, inputRate) {
   return new Uint8Array(output);
 }
 export class Recorder {
-  constructor(onLimit) { this.onLimit = onLimit; this.active = false; this.generation = 0; }
+  constructor(onLimit, onError = () => {}, environment = globalThis) {
+    Object.assign(this,{onLimit,onError,environment,active:false,generation:0});
+  }
   async start(deviceId = '') {
-    const generation = ++this.generation;
-    this.chunks = [];
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { ...(deviceId ? { deviceId: { exact: deviceId } } : {}), channelCount: 1, echoCancellation: true, noiseSuppression: true }, video: false });
-    if (generation !== this.generation) { stream.getTracks().forEach(track => track.stop()); return; }
-    this.stream = stream;
+    this.cancel();
+    const generation = this.generation, resource = {chunks:[],disposed:false};
+    this.resource = resource;
+    const stale = () => generation !== this.generation;
     try {
-      this.context = new AudioContext(); this.rate = this.context.sampleRate;
-      await this.context.audioWorklet.addModule('floatdot://app/audio-worklet.js');
-      if (generation !== this.generation) { this.cancel(); return; }
-      this.node = new AudioWorkletNode(this.context, 'float-dot-recording');
-      this.node.port.onmessage = event => { if (this.active) this.chunks.push(event.data); };
-      this.source = this.context.createMediaStreamSource(stream);
-      this.gain = this.context.createGain(); this.gain.gain.value = 0;
-      this.source.connect(this.node); this.node.connect(this.gain); this.gain.connect(this.context.destination);
-      await this.context.resume();
-      if (generation !== this.generation) return;
+      const stream = await this.environment.navigator.mediaDevices.getUserMedia({ audio: { ...(deviceId ? { deviceId: { exact: deviceId } } : {}), channelCount: 1, echoCancellation: true, noiseSuppression: true }, video: false });
+      // Permission may resolve after cancel: stop only this attempt's tracks.
+      if (stale()) { stream.getTracks().forEach(track=>track.stop()); return false; }
+      resource.stream=stream;
+      resource.ended=()=>{ if (!stale()) { this.cancel(); this.onError(new Error('Microphone disconnected. Reconnect it or choose another microphone in AI Settings.')); } };
+      stream.getTracks().forEach(track=>track.addEventListener('ended',resource.ended));
+      resource.context = new this.environment.AudioContext(); resource.rate = resource.context.sampleRate;
+      await resource.context.audioWorklet.addModule('floatdot://app/audio-worklet.js');
+      if (stale()) { this.dispose(resource); return false; }
+      resource.node = new this.environment.AudioWorkletNode(resource.context, 'float-dot-recording');
+      resource.node.port.onmessage = event => { if (!stale() && this.active) resource.chunks.push(event.data); };
+      resource.source = resource.context.createMediaStreamSource(stream);
+      resource.gain = resource.context.createGain(); resource.gain.gain.value = 0;
+      resource.source.connect(resource.node); resource.node.connect(resource.gain); resource.gain.connect(resource.context.destination);
+      await resource.context.resume();
+      if (stale()) { this.dispose(resource); return false; }
       this.active = true;
-      this.timer = setTimeout(() => this.onLimit(), 30000);
-    } catch (error) { this.cancel(); throw error; }
+      this.timer = setTimeout(() => { if (!stale()) this.onLimit(); }, 30000);
+      return true;
+    } catch (error) {
+      this.dispose(resource);
+      if (stale()) return false;
+      this.cancel();
+      const messages = {
+        NotAllowedError:'Microphone access was denied. Allow desktop microphone access in Windows Settings, then retry.',
+        NotFoundError:'No microphone found. Connect one and choose it in AI Settings.',
+        OverconstrainedError:'The selected microphone is unavailable. Choose System default or another microphone in AI Settings.',
+        NotReadableError:'The microphone could not start. Close other apps using it, then retry.'
+      };
+      throw new Error(messages[error.name] || `Microphone could not start. ${error.message}`);
+    }
   }
   async stop() {
-    const chunks = this.chunks || [], rate = this.rate;
+    const chunks = this.resource?.chunks || [], rate = this.resource?.rate;
     this.cancel();
     if (!chunks.length) throw new Error('No microphone audio recorded. Try again.');
     let energy = 0, samples = 0;
@@ -51,11 +70,15 @@ export class Recorder {
   }
   cancel() {
     ++this.generation; this.active = false; clearTimeout(this.timer);
-    this.stream?.getTracks().forEach(track => track.stop()); this.stream = null;
-    this.source?.disconnect(); this.node?.disconnect(); this.gain?.disconnect();
-    if (this.node) this.node.port.onmessage = null;
-    this.context?.close().catch(() => {}); this.context = null;
-    this.chunks = [];
+    this.dispose(this.resource); this.resource=null;
+  }
+  dispose(resource) {
+    if (!resource || resource.disposed) return;
+    resource.disposed=true;
+    resource.stream?.getTracks().forEach(track=>{track.removeEventListener('ended',resource.ended);track.stop();});
+    for (const node of [resource.source,resource.node,resource.gain]) { try { node?.disconnect(); } catch {} }
+    if (resource.node) resource.node.port.onmessage=null;
+    resource.context?.close().catch(()=>{});
   }
 }
 

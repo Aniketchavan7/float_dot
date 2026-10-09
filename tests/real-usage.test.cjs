@@ -13,7 +13,7 @@ test('real usage: 10 consecutive requests execute sequentially without collision
     infer: async ({ messages, onDelta, signal }) => {
       // Simulate chunked streaming inference
       signal.throwIfAborted();
-      const question = messages.at(-1).content;
+      const question = messages.at(-1).content.split('\n\nResponse format:')[0];
       const answer = `Analysis for: ${question}`;
       const chunks = answer.split(' ');
       for (const chunk of chunks) {
@@ -87,7 +87,7 @@ test('real usage: rapid cancellation aborts signal, suppresses stale deltas, and
   // Start request
   const requestPromise = coordinator.ask({
     question: 'How to optimize?',
-    mode: 'dsa',
+    mode: 'general',
     model: 'qwen3:4b',
     context
   });
@@ -124,7 +124,7 @@ test('real usage: rapid back-to-back requests cancel prior jobs and settle on th
       // Give a tiny async delay to simulate network/model latency
       await new Promise(r => setTimeout(r, 20));
       signal.throwIfAborted();
-      const ans = `Answer: ${messages.at(-1).content}`;
+      const ans = `Answer: ${messages.at(-1).content.split('\n\nResponse format:')[0]}`;
       onDelta(ans);
       return ans;
     }
@@ -158,7 +158,7 @@ test('real usage: follow-ups retain context on same window, clear on window swit
     emit: () => {},
     infer: async ({ messages }) => {
       receivedMessagesList.push(messages);
-      return `Answer for ${messages.at(-1).content}`;
+      return `Answer for ${messages.at(-1).content.split('\n\nResponse format:')[0]}`;
     }
   });
 
@@ -179,7 +179,7 @@ test('real usage: follow-ups retain context on same window, clear on window swit
   const step2Messages = receivedMessagesList[1];
   assert.equal(step2Messages.some(m => m.content === 'What is win1?'), true);
   assert.equal(step2Messages.some(m => m.content === 'Answer for What is win1?'), true);
-  assert.equal(step2Messages.at(-1).content, 'Can you elaborate?');
+  assert.equal(step2Messages.at(-1).content.split('\n\nResponse format:')[0], 'Can you elaborate?');
 
   // Step 3: Switch window to win2
   await coordinator.ask({ question: 'Now explain win2', mode: 'general', model: 'qwen3:4b', context: win2 });
@@ -204,7 +204,7 @@ test('real usage: pipeline from audio question and captured window into coordina
   const coordinator = new Coordinator({
     emit: event => events.push(event),
     infer: async ({ messages, onDelta }) => {
-      const q = messages.at(-1).content;
+      const q = messages.at(-1).content.split('\n\nResponse format:')[0];
       assert.equal(q, 'What is the runtime complexity of this function?');
       onDelta('The complexity is O(N) because it iterates over the list once.');
       return 'The complexity is O(N) because it iterates over the list once.';
@@ -242,7 +242,7 @@ test('real usage: session memory preserves multi-turn conversation across screen
     emit: () => {},
     infer: async ({ messages }) => {
       messagesReceived.push(messages);
-      return `Answer for ${messages.at(-1).content}`;
+      return `Answer for ${messages.at(-1).content.split('\n\nResponse format:')[0]}`;
     }
   });
 
@@ -277,7 +277,7 @@ test('real usage: session memory preserves multi-turn conversation across screen
   const secondPromptMessages = messagesReceived[1];
   assert.equal(secondPromptMessages.some(m => m.content === 'What data structure should I use?'), true);
   assert.equal(secondPromptMessages.some(m => m.content === 'Answer for What data structure should I use?'), true);
-  assert.equal(secondPromptMessages.at(-1).content, 'How do I check complements in the hash map?');
+  assert.equal(secondPromptMessages.at(-1).content.split('\n\nResponse format:')[0], 'How do I check complements in the hash map?');
 
   // Follow-up question 2
   await coordinator.ask({ question: 'What is the space complexity?', mode: 'dsa', model: 'qwen3:1.7b', context: capture2 });
@@ -289,4 +289,3 @@ test('real usage: session memory preserves multi-turn conversation across screen
   assert.equal(coordinator.history.length, 0);
   assert.equal(coordinator.hintLevel, 0);
 });
-

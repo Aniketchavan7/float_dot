@@ -30,10 +30,6 @@ class SettingsStore {
   async load() {
     try {
       this.value = { ...DEFAULTS, ...validateSettings(JSON.parse(await fs.readFile(this.file, 'utf8'))) };
-      if (this.value.model === 'qwen3:4b') {
-        this.value.model = 'qwen3:1.7b';
-        await atomicWrite(this.file, JSON.stringify(this.value, null, 2)).catch(() => {});
-      }
     }
     catch (error) { if (error.code !== 'ENOENT') this.recovered = true; }
     return this.value;

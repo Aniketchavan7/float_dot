@@ -57,7 +57,8 @@ function validateAudio(input) {
     || buffer.toString('ascii', 8, 12) !== 'WAVE' || buffer.toString('ascii', 12, 16) !== 'fmt '
     || buffer.readUInt32LE(16) !== 16 || buffer.readUInt16LE(20) !== 1
     || buffer.readUInt16LE(22) !== 1 || buffer.readUInt32LE(24) !== 16000
-    || buffer.readUInt16LE(34) !== 16 || buffer.toString('ascii', 36, 40) !== 'data'
+    || buffer.readUInt16LE(34) !== 16 || buffer.readUInt16LE(32) !== 2 || buffer.readUInt32LE(28) !== 32000
+    || (buffer.length - 44) % 2 !== 0 || buffer.toString('ascii', 36, 40) !== 'data'
     || buffer.readUInt32LE(40) !== buffer.length - 44 || buffer.readUInt32LE(4) !== buffer.length - 8) {
     throw new Error('Recording must be a maximum 30-second, 16 kHz mono PCM16 WAV.');
   }
