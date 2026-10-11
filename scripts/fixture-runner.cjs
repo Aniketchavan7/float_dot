@@ -10,11 +10,15 @@ const path = require('node:path');
 const {
   validateCaptureContext,
   validateAnswerEvent,
+  validateSources,
+  validateDownloadEvent,
   PROVIDER_CAPABILITIES
 } = require('../src/shared/contracts');
 
 const fixturesPath = path.join(__dirname, '../tests/fixtures/contract-fixtures.json');
 const rawFixtures = JSON.parse(fs.readFileSync(fixturesPath, 'utf8'));
+validateSources(rawFixtures.webSources);
+validateDownloadEvent(rawFixtures.downloadProgress);
 
 console.log('=== Float Dot Fixture Runner (M00 Contract Verification) ===\n');
 

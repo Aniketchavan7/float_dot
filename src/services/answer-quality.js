@@ -23,15 +23,17 @@ function normalizeAnswer(value) {
   }
   return processed;
 }
-function assessAnswer({ answer, mode, question, hintLevel = 0 }) {
-  const policy = answerPolicy(mode, question, hintLevel);
+function assessAnswer({ answer, mode, question, hintLevel = 0, hasScreen = true }) {
+  const policy = answerPolicy(mode, question, hintLevel, hasScreen);
   const issues = [];
   const headings = [...answer.matchAll(/^#{1,3}\s+(.+?)\s*$/gm)].map(match => match[1].toLowerCase());
   if (!policy.headings.every(heading => headings.includes(heading.toLowerCase()))) issues.push('The model did not follow the requested section format.');
   const words = answer.replace(/^#{1,3}.*$/gm, '').trim().split(/\s+/).filter(Boolean).length;
   const hintViolation = policy.hintOnly && (/```/.test(answer) || words > 45 || headings.some(h => h !== 'hint'));
   if (hintViolation) issues.push('The model gave more than one short hint.');
+  const missingCode = policy.requiresCode && !/```[^\n`]*\n[\s\S]*?\S[\s\S]*?\n```/.test(answer);
+  if (missingCode) issues.push('You requested code, but the model did not include a code block.');
   if (/<\/?think>|\b(let me think|the user (?:wants|asks)|we need to (?:answer|respond))\b/i.test(answer)) issues.push('The model returned analysis instead of a clean final answer.');
-  return { issues, hintViolation, structured: issues.length === 0, words };
+  return { issues, hintViolation, missingCode, structured: issues.length === 0, words };
 }
 module.exports = { normalizeAnswer, assessAnswer };

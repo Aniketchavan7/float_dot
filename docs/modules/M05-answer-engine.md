@@ -1,6 +1,6 @@
 # M05 — Prompt, context and answer engine
 
-**Status:** Built & Verified · **Owner:** together · **Dependencies:** M00; integrated M03/M04/M06
+**Status:** Implemented; release qualification pending · **Owner:** together · **Dependencies:** M00; integrated M03/M04/M06
 
 Outcome: useful, grounded, to-the-point answers with anti-injection defense and measured quality.
 
@@ -21,3 +21,6 @@ Entry: `src/services/prompts.js`, `coordinator.js`, `answer-quality.js`, `script
 - `normalizeAnswer` strips conversational preamble and enforces structured section headers.
 - Anti-injection tests verify screen text cannot hijack system directives.
 - All 89 unit tests pass (`npm test`).
+
+
+**10 October audit:** Earlier completion labels are implementation history, not release approval. See [current implementation and remaining gates](../MODULE_IMPLEMENTATION_AUDIT.md).

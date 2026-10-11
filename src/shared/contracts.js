@@ -86,6 +86,7 @@
  * @property {number} turn Multi-turn conversation counter (1-indexed)
  * @property {string} answer Full normalized answer text in Markdown format
  * @property {string[]} [warnings] Optional quality or token-cutoff warnings
+ * @property {WebSource[]} [sources] Validated retrieved sources; never credentials
  */
 
 /**
@@ -224,17 +225,37 @@ function validateCaptureContext(input) {
  * @param {any} event
  * @returns {AnswerEvent}
  */
+/** @typedef {{id:number,title:string,url:string,excerpt?:string}} WebSource */
+/** @typedef {{requestId:string,message:string,bytes:number,kind?:string}} DownloadProgress */
+function validateSources(sources) {
+  if (!Array.isArray(sources) || sources.length > 5) throw new Error('Invalid web sources.');
+  const ids = new Set();
+  for (const source of sources) {
+    if (!source || !Number.isInteger(source.id) || source.id < 1 || ids.has(source.id)) throw new Error('Invalid source ID.');
+    ids.add(source.id);
+    const url = new URL(source.url);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || source.url.length > 4000) throw new Error('Invalid source URL.');
+    if (typeof source.title !== 'string' || source.title.length > 200) throw new Error('Invalid source title.');
+  }
+  return sources.map(s => ({id:s.id,title:s.title,url:s.url,excerpt:String(s.excerpt || '').slice(0,1400)}));
+}
+function validateDownloadEvent(event) {
+  if (!event || typeof event.requestId !== 'string' || !event.requestId || typeof event.message !== 'string' || event.message.length > 300 || !Number.isFinite(event.bytes) || event.bytes < 0) throw new Error('Invalid download progress.');
+  return {requestId:event.requestId,message:event.message,bytes:event.bytes,...(['ocr','speech'].includes(event.kind)?{kind:event.kind}:{})};
+}
 function validateAnswerEvent(event) {
   if (!event || typeof event !== 'object') throw new Error('Invalid AnswerEvent: object expected.');
   if (typeof event.requestId !== 'string' || !event.requestId) throw new Error('AnswerEvent requires requestId.');
-  const validTypes = ['started', 'delta', 'done', 'canceled', 'error'];
+  const validTypes = ['started', 'delta', 'done', 'canceled', 'error', 'tool'];
   if (!validTypes.includes(event.type)) throw new Error(`Unknown AnswerEvent type: ${event.type}`);
 
+  if (event.type === 'tool' && typeof event.message !== 'string') throw new Error('Tool event requires message.');
   if (event.type === 'delta') {
     if (typeof event.delta !== 'string') throw new Error('AnswerDeltaEvent requires string delta.');
   } else if (event.type === 'done') {
     if (typeof event.turn !== 'number' || event.turn < 1) throw new Error('AnswerDoneEvent requires positive integer turn.');
     if (typeof event.answer !== 'string') throw new Error('AnswerDoneEvent requires string answer.');
+    if (event.sources) validateSources(event.sources);
     if (event.warnings && !Array.isArray(event.warnings)) throw new Error('AnswerDoneEvent warnings must be an array.');
   } else if (event.type === 'error') {
     if (typeof event.message !== 'string') throw new Error('AnswerErrorEvent requires string message.');
@@ -257,6 +278,8 @@ function validateVoiceResult(input) {
 }
 
 module.exports = {
+  validateSources,
+  validateDownloadEvent,
   PROVIDER_CAPABILITIES,
   INTENT_TO_MODE,
   MODE_TO_INTENT,

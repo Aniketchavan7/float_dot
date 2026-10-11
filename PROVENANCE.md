@@ -7,10 +7,10 @@ See [REFERENCE_AND_TIMELINE.md](REFERENCE_AND_TIMELINE.md) for the reference map
 ## Downloaded assets and dependencies
 
 - Speech runtime: official ggml-org/whisper.cpp `b5454`, Windows CPU x64 archive, verified against the release-published SHA-256. Its license is downloaded beside the runtime.
-- Speech weights: `ggerganov/whisper.cpp` base model. Setup records URL and file SHA-256 in the ignored `.models/downloads.json`. The current weight URL is mutable and not independently authenticated by a pre-pinned digest; pin model revisions/digests before public release.
-- OCR: Tesseract.js 7 WebAssembly worker, with locally downloaded English tessdata_fast. Data license is downloaded beside the model. Its current data URL is mutable; setup records the resulting hash.
+- Speech weights: `ggerganov/whisper.cpp` base model. Setup and the optional installer verify a pre-pinned SHA-256 before accepting weights; setup records the URL/hash in `.models/downloads.json`.
+- OCR: Tesseract.js 7 WebAssembly worker with English tessdata_fast. Both setup paths verify a pre-pinned SHA-256, including existing files. Data licenses accompany the assets. Mutable upstream URLs fail closed if bytes change.
 - AI: user-installed Ollama, configured locally with cloud disabled for development; Qwen3 4B weights managed by Ollama. No API key is embedded.
 - UI: locally installed marked, DOMPurify, and PrismJS; no remote script/font CDN.
 - Desktop: Electron version and package integrity recorded in package-lock.json. Runtime archive must match the official Electron checksum, including when a mirror supplies the bytes.
 
-Dependencies keep their own upstream licenses in installed packages. No release should remove required notices. Before public redistribution, finish the asset/model/dependency notice inventory and make downloads reproducible by revision/digest. The prototype is not claimed to have completed the PRD's full distribution audit.
+Dependencies keep their own upstream licenses in installed packages. THIRD_PARTY_NOTICES.md inventories runtime dependencies; Electron and OCR/speech notices accompany packaged resources. Public distribution still requires a license/notice review and the release gates in docs/RELEASE_CHECKLIST.md.
