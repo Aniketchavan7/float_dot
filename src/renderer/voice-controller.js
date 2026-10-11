@@ -21,10 +21,3 @@ export class VoiceController {
     return this.timings;
   }
 }
-
-export function wantsFreshScreen(question) {
-  // Restrict to explicit commands; discussing how to read a screen is a follow-up.
-  const command=question.trim().replace(/^(?:please|can you|could you|would you)\s+/i,'');
-  if (/\b(?:do not|don't|without|stop)\s+(?:read|capture|recapture|look|tak)/i.test(command)) return false;
-  return /^(?:(?:please\s+)?(?:read|capture|recapture|look at)\s+(?:(?:the|my|this|current|new)\s+)*(?:screen|window|display)\b|(?:please\s+)?(?:take|capture)\s+(?:a\s+)?(?:new\s+)?screenshot\b|recapture\b)/i.test(command);
-}

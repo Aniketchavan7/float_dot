@@ -24,9 +24,15 @@
       "name": "Entire Screen",
       "capturedAt": "2026-10-09T00:30:00.000Z",
       "preview": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-      "dimensions": { "width": 1920, "height": 1080 },
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
       "text": "function calculateTotal(items) {\n  return items.reduce((sum, item) => sum + item.price, 0);\n}",
-      "quality": { "confidence": 98.5, "truncated": false },
+      "quality": {
+        "confidence": 98.5,
+        "truncated": false
+      },
       "imageMode": false
     }
   },
@@ -95,6 +101,20 @@
       "requestId": "req-e4",
       "message": "Selected screen or window is minimized or unavailable.",
       "recoveryAction": "refresh-windows"
+    }
+  ],
+  "downloadProgress": {
+    "requestId": "download-fixture",
+    "kind": "ocr",
+    "message": "Downloading OCR",
+    "bytes": 1024
+  },
+  "webSources": [
+    {
+      "id": 1,
+      "title": "Fixture reference",
+      "url": "https://example.com/docs",
+      "excerpt": "Reference excerpt"
     }
   ]
 }

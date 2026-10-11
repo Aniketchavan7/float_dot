@@ -1,7 +1,7 @@
 import { Recorder, MeetingRecorder } from './audio.js';
 import { OverlayController } from './overlay.js';
 import { AnswerView } from './answer-view.js';
-import { VoiceController, wantsFreshScreen } from './voice-controller.js';
+import { VoiceController } from './voice-controller.js';
 import { SettingsView } from './settings-view.js';
 
 const api = window.floatDot;
@@ -205,8 +205,11 @@ async function refreshStatus() {
   if ($('header-model-badge')) $('header-model-badge').textContent = preferences.model;
 
   $('reasoning').checked = preferences.reasoning;
+  $('web-enabled').checked = !!preferences.webEnabled;
+  $('searx-url').value = preferences.searxURL || 'http://127.0.0.1:8888';
   $('hotkey').value = preferences.hotkey;
   $('shortcut-label').textContent = formatHotkey(preferences.hotkey);
+  $('guide-hotkey').textContent = formatHotkey(preferences.hotkey);
 
   $('microphone').replaceChildren(new Option('System default', ''));
   const microphones = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'audioinput');
@@ -361,6 +364,7 @@ async function prepare(audio, crop, openScreenshot = false, region = false) {
   }
 
   context = captured;
+  $('review-title').textContent='Captured preview';
   $('question').value = captured.transcript;
   $('review-question').value = captured.transcript;
   $('preview').src = captured.preview;
@@ -369,6 +373,7 @@ async function prepare(audio, crop, openScreenshot = false, region = false) {
   $('crop-capture').closest('details').hidden = !!openScreenshot || region;
   // Review must include the actual preview/evidence, not only a confirm button.
   $('capture-review').prepend($('evidence-details'));
+  $('evidence-details').hidden=false;
   $('evidence-details').open = preferences.confirmCapture;
   $('crop-x').value = 0;
   $('crop-y').value = 0;
@@ -387,8 +392,9 @@ async function prepare(audio, crop, openScreenshot = false, region = false) {
   }
 }
 
-async function ask(customQuestion = null) {
-  if (!context) throw new Error('Capture screen or window first.');
+async function ask(customQuestion = null, useCapture = !!context) {
+  if (useCapture && !context) throw new Error('Use Read to attach screen content first.');
+  if (!useCapture) context=null;
   const q = (customQuestion || $('question').value).trim();
   if (!q) throw new Error('Add a question or ask aloud first.');
 
@@ -398,30 +404,24 @@ async function ask(customQuestion = null) {
   activeRequest = null;
   renderAnswer();
 
-  const meta = `${providerDescription()} · ${context.name} · ${new Date(context.capturedAt).toLocaleTimeString()}`;
+  const meta = `${providerDescription()} · ${useCapture ? `${context.name} · ${new Date(context.capturedAt).toLocaleTimeString()}` : 'Chat · no screen attached'}`;
   if (answerView) answerView.show(meta);
   else $('answer-section').hidden = false;
   $('answer-section').append($('evidence-details'));
   $('evidence-details').open = false;
+  $('evidence-details').hidden = !useCapture;
   $('capture-review').hidden = true;
   state(`Asking ${providerDescription()}…`, 'busy');
   voice.submitted();
-  await call('ask', { question: q, mode, contextId: context.id });
+  await call('ask', { question: q, mode, contextId: useCapture ? context.id : null });
 }
 
 async function sendQuestion() {
   if (busy || recorder.active || micStarting) return;
   voice.cancel();$('voice-timing').hidden=true;
   const q = $('question').value.trim();
-  if (!q) {
-    await prepare();
-    return;
-  }
-  if (context && $('reuse-capture').checked) {
-    await ask();
-  } else {
-    await prepare();
-  }
+  if (!q) throw new Error('Type a question, or use Read to ask about your screen.');
+  await ask(q,!!context && $('reuse-capture').checked);
 }
 
 async function record() {
@@ -434,18 +434,19 @@ async function record() {
     if(version!==epoch || transcript===null)return;
     lock(false);setVoiceState('idle');
     $('question').value=transcript;
-    if (context && answer && $('reuse-capture').checked && !wantsFreshScreen(transcript)) {
+    {
       if (preferences.confirmCapture) {
         reviewReusesCapture=true;
+        $('review-title').textContent='Review voice question';
         $('review-question').value=transcript;
         $('capture-review').prepend($('evidence-details'));
-        $('evidence-details').open=true;
+        $('evidence-details').hidden=!context;
+        $('evidence-details').open=!!context;
+        $('crop-capture').closest('details').hidden=true;
         $('capture-review').hidden=false;
-        $('confirm').textContent='Send corrected follow-up';
-        state('Review voice question · reusing captured screen');
-      } else await ask();
-    } else {
-      await prepare();
+        $('confirm').textContent='Send question';
+        state('Review voice question');
+      } else await ask(null,!!context && $('reuse-capture').checked);
     }
     return;
   }
@@ -498,6 +499,7 @@ async function clear() {
   $('voice-timing').hidden=true;
   await stop();
   await call('clear');
+  $('web-sources').replaceChildren();
   context = null;
   answer = '';
   if (answerView) answerView.clear();
@@ -652,12 +654,8 @@ if (location.hash === '#dot') {
     onFollowUp: (q, reuse) => {
       if (busy || recorder.active || micStarting) return;
       voice.cancel();$('voice-timing').hidden=true;
-      if (reuse && context) {
-        guarded(() => ask(q));
-      } else {
-        $('question').value = q;
-        guarded(() => prepare());
-      }
+      $('question').value=q;
+      guarded(() => ask(q,!!context && reuse));
     },
     onCopy: text => {
       call('copy', text).then(() => state('Answer copied to clipboard'));
@@ -674,8 +672,7 @@ if (location.hash === '#dot') {
   on('capture', () => prepare());
   on('confirm', () => {
     $('question').value=$('review-question').value;
-    if(reviewReusesCapture && wantsFreshScreen($('review-question').value))return prepare();
-    return ask($('review-question').value);
+    return ask($('review-question').value,!!context && (!reviewReusesCapture || $('reuse-capture').checked));
   });
   on('open-screenshot', () => prepare(undefined, undefined, true));
   on('paste-screenshot', () => prepare(undefined, undefined, 'clipboard'));
@@ -693,7 +690,7 @@ if (location.hash === '#dot') {
     state,
     error,
     resetError,
-    onBeforeSave: async () => { await stop(); },
+    onBeforeSave: async () => { await clear(); },
     onSave: async updated => {
       preferences = updated;
       await refreshStatus();
@@ -711,6 +708,7 @@ if (location.hash === '#dot') {
     await stop();
     preferences = await call('settings', { hotkey: $('hotkey').value.trim() });
     $('shortcut-label').textContent = formatHotkey(preferences.hotkey);
+  $('guide-hotkey').textContent = formatHotkey(preferences.hotkey);
     state('Shortcut saved');
   });
 
@@ -790,7 +788,7 @@ if (location.hash === '#dot') {
     setModeButtons();
   })));
 
-  for (const [id, key] of [['confirm-capture', 'confirmCapture'], ['read-aloud', 'readAloud'], ['reasoning', 'reasoning'], ['theme', 'theme']]) {
+  for (const [id, key] of [['confirm-capture', 'confirmCapture'], ['read-aloud', 'readAloud'], ['reasoning', 'reasoning'], ['theme', 'theme'], ['web-enabled', 'webEnabled']]) {
     $(id).addEventListener('change', () => guarded(async () => {
       await stop();
       preferences = await call('settings', { [key]: $(id).type === 'checkbox' ? $(id).checked : $(id).value });
@@ -798,7 +796,50 @@ if (location.hash === '#dot') {
     }));
   }
 
-  api.onHotkey(() => guarded(mode === 'meeting' ? (meetingActive ? stopMeeting : startMeeting) : record));
+  on('test-web', async () => {
+    const button = $('test-web'), status = $('web-connection-status');
+    button.disabled = true;
+    status.hidden = false;
+    status.textContent = 'Testing with a public JavaScript documentation query…';
+    try {
+      const result = await call('testWeb', { endpoint: $('searx-url').value });
+      status.textContent = result.resultCount ? `Search connected · ${result.resultCount} references returned` : 'SearXNG responded, but returned no results. Check its search engines before relying on web answers.';
+    } catch (failure) { status.textContent = failure.message; }
+    finally { button.disabled = false; }
+  });
+
+  let activeDownload = null;
+  for (const kind of ['ocr', 'speech']) on(`install-${kind}`, async () => {
+    $('download-model').disabled = $('install-ocr').disabled = $('install-speech').disabled = true;
+    $('cancel-assets').hidden = false;
+    activeDownload = crypto.randomUUID();
+    try { await call('installAssets', {kind, requestId:activeDownload}); $('asset-progress').textContent = 'Installed and verified'; await refreshStatus(); }
+    catch (failure) { $('asset-progress').textContent = `Installation stopped: ${failure.message}`; }
+    finally { activeDownload = null; $('download-model').disabled = $('install-ocr').disabled = $('install-speech').disabled = false; $('cancel-assets').hidden = true; }
+  });
+  on('download-model', async () => {
+    if ($('provider').value !== 'ollama') throw new Error('Choose Ollama before downloading a local model.');
+    const requestedModel = $('model').value.trim();
+    $('install-ocr').disabled = $('install-speech').disabled = $('download-model').disabled = true; $('cancel-assets').hidden = false;
+    activeDownload = crypto.randomUUID();
+    try { await call('downloadModel', {model:requestedModel, requestId:activeDownload}); $('asset-progress').textContent = 'Model downloaded. Save your provider selection to use it.'; await refreshStatus(); $('provider').value = 'ollama'; $('model').value = requestedModel; }
+    catch (failure) { $('asset-progress').textContent = failure.message; }
+    finally { activeDownload = null; $('install-ocr').disabled = $('install-speech').disabled = $('download-model').disabled = false; $('cancel-assets').hidden = true; }
+  });
+  on('cancel-assets', () => call('cancelAssets'));
+  on('open-ollama', () => call('openOllama'));
+  api.onAssetProgress(progress => { if (progress.requestId !== activeDownload) return; $('asset-progress').textContent = progress.message + (progress.bytes ? ` · ${(progress.bytes / 1048576).toFixed(1)} MB` : ''); });
+
+  on('save-web', () => guarded(async () => {
+    await stop();
+    preferences = await call('settings', { searxURL: $('searx-url').value });
+    state('Search endpoint saved');
+  }));
+
+  api.onHotkey(() => {
+    if (busy || micStarting || recorder.active || meetingActive) return;
+    guarded(() => prepare());
+  });
 
   api.onCancel(() => {
     recorder.cancel();
@@ -817,10 +858,12 @@ if (location.hash === '#dot') {
   api.onAnswer(event => {
     if (event.type === 'started') {
       activeRequest = event.requestId;
+      $('web-sources').replaceChildren();
       state(`Answering · ${providerDescription()}`, 'busy');
       return;
     }
     if (event.requestId !== activeRequest) return;
+    if (event.type === 'tool') state(event.message, 'busy');
     if (event.type === 'delta') {
       const timings=voice.firstAnswer();
       if(timings?.firstAnswerMs!==undefined) {
@@ -832,6 +875,14 @@ if (location.hash === '#dot') {
     }
     if (event.type === 'done') {
       if (typeof event.answer === 'string') answer = event.answer;
+      for (const source of event.sources || []) {
+        const button = document.createElement('button');
+        button.className = 'text-button';
+        button.textContent = `[${source.id}] ${source.title}`;
+        button.title = source.url;
+        button.addEventListener('click', () => guarded(() => call('openSource', { requestId: event.requestId, id: source.id })));
+        $('web-sources').append(button);
+      }
       answerState(event.warnings?.length ? `Complete · ${event.warnings.join(' ')}` : 'Complete', true);
       lock(false);
       scheduleRender(true);

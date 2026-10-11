@@ -1,6 +1,6 @@
 # M10 — Pilot, support and launch
 
-**Status:** Pilot-Ready · **Owner:** Aniket · **Dependencies:** M09 release candidate
+**Status:** Materials prepared; pilot not conducted · **Owner:** Aniket · **Dependencies:** M09 release candidate
 
 Outcome: evidence that the app is useful and unobtrusive for people other than its developer.
 
@@ -12,3 +12,6 @@ Outcome: evidence that the app is useful and unobtrusive for people other than i
 - [ ] Conduct 5-tester 7-day pilot evaluation and triage findings.
 
 **Complete when:** at least four testers finish the main journey without assistance, at least three return on three days, no critical/high core defect remains, and all other release gates pass.
+
+
+**10 October audit:** Earlier completion labels are implementation history, not release approval. See [current implementation and remaining gates](../MODULE_IMPLEMENTATION_AUDIT.md).

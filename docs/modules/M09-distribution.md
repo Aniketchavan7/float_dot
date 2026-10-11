@@ -14,3 +14,6 @@ Entry: `package.json`, electron-builder configuration, `dist/win-unpacked`.
 
 **Verification:**
 - `npm run pack`: Succeeded, output at `dist/win-unpacked/Float Dot.exe` (246 MB).
+
+
+**10 October audit:** Earlier completion labels are implementation history, not release approval. See [current implementation and remaining gates](../MODULE_IMPLEMENTATION_AUDIT.md).

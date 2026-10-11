@@ -1,0 +1,16 @@
+[
+  {
+    "fixture": "voice-question.wav",
+    "synthetic": true,
+    "audioSeconds": 6.76,
+    "transcriptionMs": 2447,
+    "transcript": "Explain why this array has 10 elements. Give me one hint about binary search."
+  },
+  {
+    "fixture": "voice-question-india.wav",
+    "synthetic": true,
+    "audioSeconds": 6.717,
+    "transcriptionMs": 1703,
+    "transcript": "Explain why this array has 10 elements. Give me one hint about binary search."
+  }
+]

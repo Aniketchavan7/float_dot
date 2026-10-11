@@ -15,7 +15,9 @@
     "setup:local": "node scripts/setup-local.cjs",
     "check:local": "node scripts/check-local.cjs",
     "pack": "electron-builder --dir",
-    "build:win": "electron-builder --win portable"
+    "build:win": "electron-builder --win nsis portable",
+    "setup:search": "node scripts/setup-search.cjs",
+    "release:checksums": "node scripts/release-checksums.cjs"
   },
   "dependencies": {
     "dompurify": "3.4.16",
@@ -31,10 +33,48 @@
     "appId": "dev.floatdot.desktop",
     "productName": "Float Dot",
     "asar": true,
-    "files": ["src/**/*", "package.json", "node_modules/**/*", "PROVENANCE.md"],
-    "extraResources": [{"from":".models", "to":"models", "filter":["**/*", "!*.zip"]}],
-    "asarUnpack": ["node_modules/tesseract.js/**/*", "node_modules/tesseract.js-core/**/*"],
-    "win": {"target":"portable"},
-    "directories": {"output":"dist"}
+    "files": [
+      "src/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "PROVENANCE.md",
+      "THIRD_PARTY_NOTICES.md"
+    ],
+    "extraResources": [
+      {
+        "from": ".models",
+        "to": "models",
+        "filter": [
+          "eng.traineddata",
+          "ggml-base.bin",
+          "*-LICENSE.txt",
+          "whisper/**/whisper-cli.exe",
+          "whisper/**/*.dll"
+        ]
+      }
+    ],
+    "asarUnpack": [
+      "node_modules/tesseract.js/**/*",
+      "node_modules/tesseract.js-core/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "${productName}-${version}-${arch}-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${arch}-Portable.${ext}"
+    }
   }
 }

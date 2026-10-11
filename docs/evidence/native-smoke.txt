@@ -1,0 +1,24 @@
+
+> float-dot@0.1.0 smoke
+> node scripts/start.cjs --smoke
+
+
+AUDIO_WORKLET_SMOKE_OK {"bytes":49452,"fakeInput":true}
+NATIVE_WINDOW_SMOKE_OK {"cycles":100,"passiveResizes":30,"answerUpdates":30,"focusEvents":0,"idleHeight":71,"scale":1.25}
+REGION_PICKER_SMOKE_OK {"region":{"x":99.74025974025975,"y":99.65397923875433,"width":249.35064935064935,"height":149.4809688581315},"escape":true,"syntheticOnly":true}
+IMAGE_IMPORT_SMOKE_OK {"nativeDecode":true,"file":true,"clipboardAdapter":true,"cancel":true,"userClipboardUntouched":true}
+Estimating resolution as 951
+WINDOW_CAPTURE_OCR_SMOKE_OK {"confidence":94,"chars":171,"syntheticOnly":true}
+Estimating resolution as 951
+CAPTURE_REVIEW_SMOKE_OK {"visible":true,"evidence":true}
+STRUCTURED_ANSWER_SMOKE_OK {"headings":3,"table":true,"code":true,"complete":"true","unsafe":false,"copyDisabled":false}
+PROVIDER_IMAGE_SMOKE_OK {"endpoint":"loopback test server","paidAPICalled":false,"osEncryption":true}
+VOICE_REVIEW_SMOKE_OK {"reviewedFollowUp":true,"recordingStopped":true,"timing":"Voice: transcription 307 ms · answer after send 8 ms","correctedProviderQuestion":true,"recognition":"synthetic adapter","microphone":"Electron fake input"}
+CHAT_ROUTING_SMOKE_OK {"question":"give code","captureCalls":0,"visibleAnswer":true,"screenEvidenceSent":true,"imageSent":true}
+CHAT_ROUTING_SMOKE_OK {"question":"two sum","captureCalls":0,"visibleAnswer":true,"screenEvidenceSent":false,"imageSent":false}
+CHAT_ROUTING_SMOKE_OK {"question":"Read the screen","captureCalls":0,"visibleAnswer":true,"screenEvidenceSent":false,"imageSent":false}
+CHAT_ROUTING_SMOKE_OK {"question":"Take a new screenshot","captureCalls":0,"visibleAnswer":true,"screenEvidenceSent":false,"imageSent":false}
+EXPLICIT_CAPTURE_SHORTCUT_SMOKE_OK {"captureCalls":1,"reviewed":true}
+WEB_SEARCH_SMOKE_OK {"searches":2,"sourceButtons":1,"connectionTest":true,"captureCalls":0,"forgedSourceRejected":true,"syntheticOnly":true}
+ONBOARDING_SMOKE_OK {"explicitInstall":true,"concurrentButtonsLocked":true,"progress":true,"clearRemovesSources":true,"syntheticDownload":true}
+ELECTRON_SMOKE_OK {"title":"Float Dot","bridge":"object","ready":true,"secure":true}

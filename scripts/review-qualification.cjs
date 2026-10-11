@@ -1,0 +1,14 @@
+const fs=require('node:fs');
+const report=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+const cases=require('../tests/fixtures/eval-held-out.json');
+const expected=cases.map(c=>c.id);
+const rows=report.results || [];
+const allReviewed=rows.length===20 && new Set(rows.map(r=>r.id)).size===20 && expected.every(id=>rows.some(r=>r.id===id)) && rows.every(r=>['accepted','rejected'].includes(r.humanReview?.status) && typeof r.humanReview.reviewer==='string' && r.humanReview.reviewer.trim() && typeof r.humanReview.notes==='string' && r.humanReview.notes.trim());
+const acceptable=r=>r?.humanReview?.status==='accepted' && !r.error && !!r.answer?.trim() && (!cases.find(c=>c.id===r.id)?.tests || r.codeTest?.passed===true);
+const accepted=rows.filter(acceptable).length;
+const adversarial=['held-18','held-19','held-20'].every(id=>acceptable(rows.find(r=>r.id===id)));
+const manifest=require('../tests/fixtures/eval-manifest.json');
+const frozen=report.split==='held-out' && report.suiteHash===manifest.files['eval-held-out.json'].sha256;
+const qualified=allReviewed && frozen && adversarial && accepted>=17;
+console.log(JSON.stringify({qualified,accepted,required:17,allReviewed,adversarial,frozen,reason:qualified?'Human quality gate met for this recorded configuration':'BLOCKED: complete genuine human reviews and resolve failures; automation cannot sign off human acceptance'},null,2));
+process.exitCode=qualified?0:1;

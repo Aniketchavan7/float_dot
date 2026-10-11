@@ -1,0 +1,828 @@
+{
+  "model": "llama3.2:3b",
+  "promptHash": "3589c06cf299acf8d02e8e3993da5eebd2118940b362da67dc314b2a19579083",
+  "split": "development",
+  "suiteVersion": 1,
+  "suiteHash": "ca888df21ca461829653ae3f3b7f3f1425037af8c4cac0791ecf546fdd4fcb33",
+  "date": "2026-10-11T10:47:32.101Z",
+  "image": "sha256:85492ba800a861e3e8ff6014c430e81369fe6ca766a9990595f616d1ce95b272",
+  "results": [
+    {
+      "id": "dsa-01",
+      "question": "Give me one hint without revealing the solution.",
+      "expectedBehavior": "Provides conceptual nudge using complement/hash table without providing full solution code",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe problem is related to finding two elements in an array that have a specific relationship with each other, which can be expressed mathematically.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 24
+      },
+      "firstAnswerMs": 8677,
+      "durationMs": 9507
+    },
+    {
+      "id": "dsa-02",
+      "question": "How should I approach this problem?",
+      "expectedBehavior": "Mentions LIFO stack property without outputting complete solution",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe input string can be validated by checking if it contains any unmatched opening brackets and ensuring that the closing bracket matches the type of the corresponding opening bracket.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 29
+      },
+      "firstAnswerMs": 419,
+      "durationMs": 1332
+    },
+    {
+      "id": "dsa-03",
+      "question": "What is the key trick to reverse this iteratively?",
+      "expectedBehavior": "Explains tracking previous and next node pointers",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe key observation is that we don't need to change the node values or store an extra list, only swap the `next` pointers between nodes.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 25
+      },
+      "firstAnswerMs": 409,
+      "durationMs": 1304
+    },
+    {
+      "id": "dsa-04",
+      "question": "Can I do this in one pass?",
+      "expectedBehavior": "Explains tracking lowest buying price seen so far",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe array can be traversed only once, and we need to keep track of the minimum price seen so far, which requires O(1) space.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 24
+      },
+      "firstAnswerMs": 379,
+      "durationMs": 1286
+    },
+    {
+      "id": "dsa-05",
+      "question": "Give me a hint on Kadane's algorithm.",
+      "expectedBehavior": "Explains restarting the subarray when running sum drops below zero",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe key to Kadane's algorithm is to maintain a running maximum sum of subarray ending at each position, which can be done by adding the current element to the previous maximum or starting a new sum from the current element.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 40
+      },
+      "firstAnswerMs": 394,
+      "durationMs": 1685
+    },
+    {
+      "id": "dsa-06",
+      "question": "Give me one hint.",
+      "expectedBehavior": "Explains halving the search space based on midpoint comparison",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe array is sorted in ascending order, which means each element's index corresponds to its value in the sequence.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 19
+      },
+      "firstAnswerMs": 376,
+      "durationMs": 1047
+    },
+    {
+      "id": "dsa-07",
+      "question": "How do I cleanly start the merged list?",
+      "expectedBehavior": "Suggests using a dummy head node to avoid edge cases",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe starting node of the merged list should be the smaller of the two nodes from `list1` and `list2`.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 19
+      },
+      "firstAnswerMs": 369,
+      "durationMs": 1114
+    },
+    {
+      "id": "dsa-08",
+      "question": "How does this relate to known sequences?",
+      "expectedBehavior": "Identifies Fibonacci pattern where ways(n) = ways(n-1) + ways(n-2)",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe problem is related to the Fibonacci sequence, where each number represents the number of ways to climb n steps.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 20
+      },
+      "firstAnswerMs": 348,
+      "durationMs": 1012
+    },
+    {
+      "id": "dsa-09",
+      "question": "What is the recursive step?",
+      "expectedBehavior": "Explains swapping left and right child pointers at each node",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe recursive step likely involves swapping the left and right child nodes of each non-leaf node.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 16
+      },
+      "firstAnswerMs": 374,
+      "durationMs": 964
+    },
+    {
+      "id": "dsa-10",
+      "question": "Is greedy enough, or do I need DP?",
+      "expectedBehavior": "Explains why greedy fails on arbitrary denominations and suggests dynamic programming",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe problem can be solved using dynamic programming because the order of coins matters and we cannot use a coin more than once to make up the amount.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 28
+      },
+      "firstAnswerMs": 354,
+      "durationMs": 1224
+    },
+    {
+      "id": "debug-11",
+      "question": "Why is this throwing an error on line 14?",
+      "expectedBehavior": "Explains the array variable being mapped is undefined prior to data fetching",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe code at `UserList.jsx:14` is throwing an error due to an uncaught TypeError, specifically \"Cannot read properties of undefined (reading 'map')\".\n\n### Likely cause\nThe likely cause of this error is that the `users` array is not being properly initialized or populated before it's being attempted to be mapped over on line 14.\n\n### Next check\nTo confirm if the issue is with the `users` array, inspect the value of `users` at runtime. Specifically, verify that `users` is an array and not undefined. This can be done by adding a console log statement before the mapping operation: `console.log(users);`. If `users` is indeed undefined, then the issue lies elsewhere in the codebase.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 105
+      },
+      "firstAnswerMs": 421,
+      "durationMs": 4625
+    },
+    {
+      "id": "debug-12",
+      "question": "Why does process.env break in Vite?",
+      "expectedBehavior": "Identifies Node.js process global missing in browser and suggests import.meta.env",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe application throws an error stating that `process` is not defined at index.js:8:5 and config.js:3:16.\n\n### Likely cause\nVite 5 uses a different approach to handle environment variables compared to Node.js. In Vite, the `process.env` object is not available by default due to its use of a proxy-based system for handling environment variables.\n\n### Next check\nCheck if the application is using a Vite plugin that enables the `process.env` object, such as `vite-plugin-env`. If not, consider adding it to your `vite.config.js` file.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 76
+      },
+      "firstAnswerMs": 382,
+      "durationMs": 3886
+    },
+    {
+      "id": "debug-13",
+      "question": "What command fixes this?",
+      "expectedBehavior": "Suggests pip install requests inside active virtual environment",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe error message indicates that the Python script `app.py` is unable to find the `requests` module.\n\n### Likely cause\nThe likely cause of this issue is that the `requests` library is not installed in the Python environment used by the script.\n\n### Next check\nTo fix this, install the `requests` library using pip, the package installer for Python. This can be done with the command `pip install requests`.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 62
+      },
+      "firstAnswerMs": 384,
+      "durationMs": 3001
+    },
+    {
+      "id": "debug-14",
+      "question": "Where does this need to be fixed?",
+      "expectedBehavior": "Clarifies that CORS headers must be added on backend server response",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe error message indicates that the request to `http://api.backend.local/data` is blocked by CORS policy due to the absence of the 'Access-Control-Allow-Origin' header.\n\n### Likely cause\nThe likely cause is that the backend server at `http://api.backend.local` does not include the necessary CORS headers in its response, preventing the frontend application at `http://localhost:3000` from making requests to it.\n\n### Next check\nCheck the backend server's configuration and API documentation to ensure that the 'Access-Control-Allow-Origin' header is included in the response for the specified origin (`http://localhost:3000`). Verify that the correct headers are being sent by checking the request headers or using a tool like `curl` or Postman.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 98
+      },
+      "firstAnswerMs": 412,
+      "durationMs": 5102
+    },
+    {
+      "id": "debug-15",
+      "question": "What are these <<<<<<< and >>>>>>> symbols?",
+      "expectedBehavior": "Explains git merge conflict markers left unresolved in source code",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe capture shows the `<<<<<<< HEAD` and `>>>>>>> feature/staging` symbols in the code snippet, indicating a Git merge conflict.\n\n### Likely cause\nThese symbols suggest that the code was merged from two different branches (HEAD and feature/staging) and did not resolve the conflicts. The `<<<<< HEAD` marker indicates the original code from the HEAD branch, while the `=======` line separates the conflicting changes, and the `>>>>>>> feature/staging` marker shows the changes from the staging branch.\n\n### Next check\nTo resolve this conflict, inspect the conflicting lines of code in both branches (HEAD and feature/staging) to understand what changes were made. Request the exact snippet of code that caused the conflict, including any surrounding context, to analyze and resolve the issue.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 114
+      },
+      "firstAnswerMs": 398,
+      "durationMs": 7495
+    },
+    {
+      "id": "debug-16",
+      "question": "Why did JSON.parse receive HTML?",
+      "expectedBehavior": "Explains server returned an HTML error page (404/500) instead of expected JSON",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe `JSON.parse()` function received HTML as input, resulting in a `SyntaxError: Unexpected token '<'`.\n\n### Likely cause\nIt is likely that the `fetchData` function is incorrectly parsing the response content as JSON instead of HTML. This could be due to a misconfigured request or a mistake in the JavaScript code.\n\n### Next check\nCheck the `fetchData` function for any configuration options that may be causing it to parse the response as JSON, such as setting the `mode` parameter to `'json'`. Verify that the request is being made with the correct content type (e.g. `application/json`) and that there are no other middleware or plugins interfering with the response parsing.\n\n### Exact HTML snippet requested\nPlease provide the exact HTML snippet from the `api.js:28` line that contains the `<!DOCTYPE ...>` tag, as this will help to confirm the cause of the issue.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 129
+      },
+      "firstAnswerMs": 544,
+      "durationMs": 7476
+    },
+    {
+      "id": "debug-17",
+      "question": "What is missing in this recursive function?",
+      "expectedBehavior": "Identifies missing or unreachable base condition causing infinite recursion",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe observed error message indicates that the `compute_factorial` function in `math_ops.py` is causing a RecursionError due to exceeding the maximum recursion depth.\n\n### Likely cause\nThe likely cause of this error is that the recursive call to `compute_factorial(n-1)` does not have a base case, leading to infinite recursion. This would happen if the function calls itself without any condition to stop the recursion.\n\n### Next check\nTo fix this issue, we need to add a base case to the recursive function to prevent it from calling itself indefinitely. We should also consider adding some input validation to ensure that `n` is a non-negative integer.\n\n```python\nimport math\n\ndef compute_factorial(n):\n    if not isinstance(n, int) or n < 0:\n        raise ValueError(\"Input must be a non-negative integer\")\n    elif n == 0 or n == 1:\n        return 1\n    else:\n        return n * compute_factorial(n-1)\n```",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 134
+      },
+      "firstAnswerMs": 581,
+      "durationMs": 9831
+    },
+    {
+      "id": "debug-18",
+      "question": "What caused this crash?",
+      "expectedBehavior": "Diagnoses memory exhaustion, infinite loop accumulation, or need for --max-old-space-size",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe observed error is a fatal JavaScript heap out of memory error, indicating that the JavaScript engine has run out of memory and cannot allocate more memory for new objects.\n\n### Likely cause\nThe likely cause of this crash is an uncontrolled growth in the size of the JavaScript heap, possibly due to an infinite loop or an object creation that is not properly cleaned up. This could be caused by a bug in the code, such as a memory leak or a recursive function that does not terminate.\n\n### Next check\nTo investigate further, we need to inspect the code for any signs of infinite loops or uncontrolled object growth. We should also check the heap size limits and ensure that they are set correctly. Additionally, we can use the Chrome DevTools to profile the application and identify where memory is being allocated and how much memory is being used.\n\nNote: The exact error message suggests that the crash occurred in a Node.js process, possibly due to a bug in the V8 JavaScript engine.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 169
+      },
+      "firstAnswerMs": 380,
+      "durationMs": 5995
+    },
+    {
+      "id": "debug-19",
+      "question": "What is Postgres telling me here?",
+      "expectedBehavior": "Explains an insert/update attempted to write an email that already exists",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nThe PostgreSQL error message indicates that there is a duplicate key value for the `email` column in the `users` table, violating the unique constraint named \"users_email_key\".\n\n### Likely cause\nThe likely cause of this error is that there is an attempt to insert or update a user with an email address (`test@example.com`) that already exists in the database.\n\n### Next check\nTo resolve this issue, verify that no duplicate emails are being inserted or updated in the `users` table. Review the code and data that is being used to populate the table to ensure that each email address is unique. If necessary, modify the code to handle duplicate emails or provide an error message when attempting to insert or update a user with an existing email address.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 121
+      },
+      "firstAnswerMs": 366,
+      "durationMs": 4607
+    },
+    {
+      "id": "debug-20",
+      "question": "Why won't Docker start Postgres?",
+      "expectedBehavior": "Explains host machine already has a process (or another container) bound to port 5432",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Observed\nError response from daemon: driver failed programming external connectivity on endpoint web-db: Bind for 0.0.0.0:5432 failed: port is already allocated\n\nThe Docker container is attempting to bind to port 5432, but the port is already in use.\n\n### Likely cause\nThe likely cause of this error is that another process or service is using port 5432, preventing Docker from allocating it for the Postgres container. This could be a database server running on the host machine, or another application using the port.\n\n### Next check\nTo resolve this issue, we need to identify what process or service is currently using port 5432 and either stop it or allocate a different port for the Postgres container. We can use `lsof` command to find the process using the port: `lsof -i :5432`.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 124
+      },
+      "firstAnswerMs": 380,
+      "durationMs": 5370
+    },
+    {
+      "id": "general-21",
+      "question": "What does the return function inside useEffect do?",
+      "expectedBehavior": "Explains that the returned function cleans up subscriptions when component unmounts or before re-running",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe return function inside `useEffect` is used to clean up any side effects created by the effect. In this case, it removes the event listener that was added to the window's resize event.\n\n### Screen evidence\n```javascript\nuseEffect(() => {\n  const handler = () => console.log('resized');\n  window.addEventListener('resize', handler);\n  return () => window.removeEventListener('resize', handler);\n}, []);\n```\nThe `return` statement contains a function that is called when the component is unmounted or when the effect is re-run. This function removes the event listener from the window, preventing memory leaks.\n\n### Next step\nTo verify this behavior, you can add a console log statement inside the `removeEventListener` call to see if it's being executed when the component is unmounted. For example:\n```javascript\nuseEffect(() => {\n  const handler = () => console.log('resized');\n  window.addEventListener('resize', handler);\n  return () => {\n    console.log('Removing event listener'); // Add this line\n    window.removeEventListener('resize', handler);\n  };\n}, []);\n```\nThis will log \"Removing event listener\" to the console when the component is unmounted, confirming that the cleanup function is working as expected.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 165
+      },
+      "firstAnswerMs": 451,
+      "durationMs": 7357
+    },
+    {
+      "id": "general-22",
+      "question": "What is the difference if one promise fails?",
+      "expectedBehavior": "Explains Promise.all rejects immediately on first error, whereas allSettled waits for all promises",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nWhen one promise fails in `Promise.all`, the entire operation fails and returns an object with a `status` of \"rejected\". In contrast, `Promise.allSettled` will return an array where each promise's result is either resolved or rejected, but it does not reject if all promises are settled.\n\n### Screen evidence\n```javascript\nconst p1 = new Promise((resolve, reject) => {\n  setTimeout(() => resolve('p1'), 2000);\n});\n\nconst p2 = new Promise((resolve, reject) => {\n  reject('p2');\n});\n\nconst p3 = new Promise((resolve, resolve) => {\n  resolve('p3');\n});\n```\n\n### Next step\nTo see the difference when one promise fails, you can add a `catch` block to handle the rejected promise in `Promise.all`, or use `Promise.allSettled` and check the results for each promise individually. For example:\n```javascript\nconst results = await Promise.all([p1, p2, p3].map(p => p.catch(e => e)));\n// vs\nconst settled = await Promise.allSettled([p1, p2, p3]);\n```\nThis will allow you to see the difference in how `Promise.all` and `Promise.allSettled` handle a single failed promise.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 154
+      },
+      "firstAnswerMs": 388,
+      "durationMs": 7855
+    },
+    {
+      "id": "general-23",
+      "question": "Explain how this list comprehension works.",
+      "expectedBehavior": "Explains filtering even numbers from the list and computing their squares",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe list comprehension creates a new list `squares` containing the squares of even numbers from the original list `numbers`. The expression `x**2` calculates the square of each number, and the condition `if x % 2 == 0` filters out only the even numbers.\n\n### Screen evidence\n```\nsquares = [x**2 for x in numbers if x % 2 == 0]\n```\n\n### Next step\nTo further understand this list comprehension, consider a small example with an initial list of numbers: `numbers = [1, 2, 3, 4, 5]`. Apply the same logic to see how it generates the `squares` list.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 93
+      },
+      "firstAnswerMs": 369,
+      "durationMs": 4398
+    },
+    {
+      "id": "general-24",
+      "question": "What is the difference between &str and String here?",
+      "expectedBehavior": "Explains String is an owned heap buffer while &str is an immutable borrowed string slice",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe main difference between `&str` and `String` is ownership and mutability.\n\n`&str` is a reference to a string slice, which means it's a pointer to a sequence of bytes in memory. The data is owned by the caller, and the reference is valid as long as the original string remains valid.\n\nOn the other hand, `String` is a owned type that manages its own memory. It's a growable buffer of characters.\n\nIn this specific code snippet, `&str` is used for function parameters because it implies an immutable view of the input string, while `String` would imply ownership and mutability, which might not be desirable in this context.\n\n### Screen evidence\n```rust\nfn print_slice(text: &str) { ... }\nfn take_owned(text: String) { ... }\n```\nThe use of `&str` for function parameters is visible in the code excerpt. The `take_owned` function parameter uses `String`, which suggests that it takes ownership of the input string.\n\n### Next step\nTo further understand the difference, consider what would happen if you tried to pass a `String` to the `print_slice` function, which expects an immutable reference to a string slice (`&str`). You might encounter errors or unexpected behavior.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 187
+      },
+      "firstAnswerMs": 481,
+      "durationMs": 8125
+    },
+    {
+      "id": "general-25",
+      "question": "What happens to users who have placed zero orders?",
+      "expectedBehavior": "Explains INNER JOIN excludes users without orders, LEFT JOIN keeps them with NULL order fields",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe query results for users with no orders will include all columns (e.g., `u.name` and `o.id`) but with `NULL` values in the `o.id` column.\n\n### Screen evidence\n<screen_excerpt>\n+---------+----+\n| name    | id |\n+---------+----+\n| John    | NULL |\n+---------+----+\n| Alice   | NULL |\n+---------+----+\n</screen_excerpt>\n\nNote that the `LEFT JOIN` returns all rows from the left table (`users`) and matching rows from the right table (`orders`). If there are no matches, the result is `NULL`.\n\n### Next step\nTo verify this behavior, you can try running a query with an additional filter to ensure only users with zero orders are included. For example:\n\n```sql\nSELECT u.name, o.id FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.id IS NULL;\n```\n\nThis should return the same result as the original queries.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 130
+      },
+      "firstAnswerMs": 374,
+      "durationMs": 5942
+    },
+    {
+      "id": "general-26",
+      "question": "Which one controls horizontal spacing here?",
+      "expectedBehavior": "Clarifies justify-content controls main axis (horizontal in row), align-items controls cross axis",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\n`justify-content: space-between`\n\n### Screen evidence\n```\n.container {\n  display: flex;\n  flex-direction: row;\n  justify-content: space-between;\n  align-items: center;\n}\n```\n\n### Next step\nTo verify the answer, check if changing `justify-content` to another value (e.g., `space-around`, `flex-start`, or `flex-end`) affects the horizontal spacing.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 35
+      },
+      "firstAnswerMs": 383,
+      "durationMs": 2734
+    },
+    {
+      "id": "general-27",
+      "question": "What type does Permissions represent?",
+      "expectedBehavior": "Explains an object map where each UserRole is a key with a string array value",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\n`Permissions` represents a record.\n\n### Screen evidence\n```typescript\ntype UserRole = 'admin' | 'editor' | 'viewer';\ntype Permissions = Record<UserRole, string[]>;\n```\nThe `Record` type is used to create a new object type that maps values of one type to values of another type. In this case, it's mapping `UserRole` (a union type) to an array of strings.\n\n### Next step\nTo further understand how `Permissions` works, we could check the types of the `UserRole` and `string[]`.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 71
+      },
+      "firstAnswerMs": 385,
+      "durationMs": 3460
+    },
+    {
+      "id": "general-28",
+      "question": "Which log statement prints first?",
+      "expectedBehavior": "Explains process.nextTick executes before promise microtasks and setTimeout timers",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe `process.nextTick` callback logs first.\n\n### Screen evidence\nThe code snippet shows three asynchronous operations: `setTimeout`, `Promise.resolve().then()`, and `process.nextTick`. The `process.nextTick` function is a built-in Node.js function that executes the provided callback in the next iteration of the event loop, without waiting for any other tasks to complete.\n\n### Next step\nTo understand why `process.nextTick` logs first, consider how Node.js handles asynchronous operations. When an operation is scheduled using `setTimeout`, `Promise.resolve().then()`, or `process.nextTick`, it is added to a queue of pending operations. The event loop iterates through this queue and executes each operation in the order they were added.\n\nIn this case, since `process.nextTick` is executed immediately after scheduling, its callback will be logged before any other callback that was scheduled using `setTimeout` or `Promise.resolve().then()`.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 119
+      },
+      "firstAnswerMs": 362,
+      "durationMs": 5447
+    },
+    {
+      "id": "general-29",
+      "question": "What does rebase do to the commit history?",
+      "expectedBehavior": "Explains rebase replays commits on top of the target branch creating a linear history",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nRebasing moves the commit that would have been created by the feature branch onto the main branch, effectively linearizing the commit history and removing the divergent branch.\n\n### Screen evidence\n$ git merge feature\n# vs\n$ git rebase main\n\nThe `git merge` command creates a new commit that combines the changes from the feature branch into the main branch. In contrast, the `git rebase` command replays the commits from the feature branch onto the main branch, creating a new linear history.\n\n### Next step\nTo understand the difference between merging and rebasing, it's essential to consider the assumptions behind each operation. Merging preserves the commit history of both branches, while rebasing modifies it. If you want to maintain a linear commit history, rebase is often preferred. However, if you need to preserve the original commit history for some reason (e.g., collaboration or auditing), merging might be a better choice.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 142
+      },
+      "firstAnswerMs": 351,
+      "durationMs": 5463
+    },
+    {
+      "id": "general-30",
+      "question": "What is the practical difference between 401 and 403?",
+      "expectedBehavior": "Explains 401 means unauthenticated (missing/invalid login), 403 means authenticated but not permitted",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe practical difference between HTTP/1.1 401 Unauthorized and 403 Forbidden is that the former indicates that the client (e.g., user or application) is not authenticated, while the latter indicates that the requested resource is not accessible due to security constraints.\n\n### Screen evidence\n<screen_excerpt>\nHTTP/1.1 401 Unauthorized\nHTTP/1.1 403 Forbidden\n</screen_excerpt>\n\nThe screen excerpt shows two consecutive HTTP status codes: 401 Unauthorized and 403 Forbidden. This suggests that the client was initially denied access due to lack of authentication, but after attempting to authenticate, it was still denied access.\n\n### Next step\nTo better understand why the client is being denied access, check if there are any authentication mechanisms in place, such as username/password combinations or token-based authentication.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 112
+      },
+      "firstAnswerMs": 349,
+      "durationMs": 4645
+    },
+    {
+      "id": "dev-code-parentheses",
+      "question": "Give only Python code for removeOuterParentheses in class Solution.",
+      "expectedBehavior": "Maintain nesting depth; remove each primitive outer pair.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "```python\nclass Solution:\n    def removeOuterParentheses(self, S: str) -> str:\n        result = []\n        count = 0\n        for char in S:\n            if char == '(':\n                count += 1\n            elif char == ')':\n                count -= 1\n            else:\n                if count > 0:\n                    result.append(char)\n        return ''.join(result)\n```",
+      "format": {
+        "issues": [],
+        "missingCode": false,
+        "structured": true,
+        "words": 42
+      },
+      "codeTest": {
+        "image": "sha256:85492ba800a861e3e8ff6014c430e81369fe6ca766a9990595f616d1ce95b272",
+        "network": "none",
+        "readOnly": true,
+        "user": "65534:65534",
+        "hostMounts": [],
+        "results": [
+          {
+            "pass": false,
+            "actual": "",
+            "expected": "()()()"
+          },
+          {
+            "pass": true,
+            "actual": "",
+            "expected": ""
+          },
+          {
+            "pass": false,
+            "actual": "",
+            "expected": "()()()()(())"
+          }
+        ],
+        "passed": false
+      },
+      "firstAnswerMs": 493,
+      "durationMs": 3483
+    },
+    {
+      "id": "dev-code-twosum",
+      "question": "Give Python code in class Solution with method twoSum(nums, target).",
+      "expectedBehavior": "Return distinct indices; handle duplicate values.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Approach\nThe problem is solved by iterating through the list of numbers and keeping track of the pairs that sum up to the target. This approach has a time complexity of O(n) because we are scanning the list once.\n\n### Solution\n```python\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        num_dict = {}\n        \n        for i, num in enumerate(nums):\n            complement = target - num\n            \n            if complement in num_dict:\n                return [num_dict[complement], i]\n            \n            num_dict[num] = i\n        \n        return []\n```\n\n### Complexity\nTime complexity: O(n)\nAuxiliary space complexity: O(n)\n\n### Edge cases\n- If the input list is empty, the function should return an empty list.\n- If there are no pairs that sum up to the target, the function should return an empty list.\n- The input list can contain duplicate numbers. In this case, the function will correctly identify all pairs of numbers that sum up to the target.",
+      "format": {
+        "issues": [],
+        "missingCode": false,
+        "structured": true,
+        "words": 141
+      },
+      "codeTest": {
+        "image": "sha256:85492ba800a861e3e8ff6014c430e81369fe6ca766a9990595f616d1ce95b272",
+        "network": "none",
+        "readOnly": true,
+        "user": "65534:65534",
+        "hostMounts": [],
+        "results": [
+          {
+            "pass": true,
+            "actual": [
+              0,
+              1
+            ],
+            "expected": [
+              0,
+              1
+            ]
+          },
+          {
+            "pass": true,
+            "actual": [
+              0,
+              1
+            ],
+            "expected": [
+              0,
+              1
+            ]
+          }
+        ],
+        "passed": true
+      },
+      "firstAnswerMs": 411,
+      "durationMs": 6768
+    },
+    {
+      "id": "dev-code-palindrome",
+      "question": "Give only Python code: class Solution, isPalindrome(s), ignore non-alphanumeric characters and case.",
+      "expectedBehavior": "Compare normalized string.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "```python\nclass Solution:\n    def isPalindrome(self, s: str) -> bool:\n        s = ''.join(c for c in s if c.isalnum()).lower()\n        return s == s[::-1]\n```",
+      "format": {
+        "issues": [],
+        "missingCode": false,
+        "structured": true,
+        "words": 23
+      },
+      "codeTest": {
+        "image": "sha256:85492ba800a861e3e8ff6014c430e81369fe6ca766a9990595f616d1ce95b272",
+        "network": "none",
+        "readOnly": true,
+        "user": "65534:65534",
+        "hostMounts": [],
+        "results": [
+          {
+            "pass": true,
+            "actual": true,
+            "expected": true
+          },
+          {
+            "pass": true,
+            "actual": false,
+            "expected": false
+          }
+        ],
+        "passed": true
+      },
+      "firstAnswerMs": 541,
+      "durationMs": 2538
+    },
+    {
+      "id": "dev-hint-general",
+      "question": "Give one hint, no solution.",
+      "expectedBehavior": "One useful nudge, no code or full algorithm.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Hint\nThe problem can be solved using a sliding window approach with a set data structure to track unique characters.",
+      "format": {
+        "issues": [],
+        "hintViolation": false,
+        "structured": true,
+        "words": 19
+      },
+      "firstAnswerMs": 397,
+      "durationMs": 1015
+    },
+    {
+      "id": "dev-short-answer",
+      "question": "Explain a stack in two sentences.",
+      "expectedBehavior": "Exactly two useful sentences, no forced headings.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "A stack is a data structure that follows the Last-In-First-Out (LIFO) principle, where the most recently added element is removed first. It consists of a set of elements stored in reverse order, allowing for efficient addition and removal of elements from both ends.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 43
+      },
+      "firstAnswerMs": 426,
+      "durationMs": 1842
+    },
+    {
+      "id": "dev-ambiguous",
+      "question": "Give code for the problem.",
+      "expectedBehavior": "Ask for missing statement/signature instead of guessing.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Approach\nThe approach to solving this problem is not explicitly stated in the provided screenshot, so I will outline a general strategy for finding and fixing issues with an evaluation fixture.\n\n1. Inspect the screenshot: Carefully examine the screenshot for any clues about the issue.\n2. Check the code: Review the code that generated the screenshot to ensure it is correct and free of errors.\n3. Test individual components: Isolate each component of the code and test it individually to identify if any part of the code is faulty.\n\n### Solution\nWithout a readable screenshot, I am unable to provide a specific solution for this problem. If you can provide more information or clarify what is displayed on the screenshot, I would be happy to try and assist further.\n\n\n### Complexity\nThe complexity of the solution cannot be determined without knowing the nature of the issue with the evaluation fixture.\n\n\n### Edge cases\nWithout more information about the issue, it is impossible to determine any edge cases that may need to be considered when fixing the problem.",
+      "format": {
+        "issues": [
+          "You requested code, but the model did not include a code block."
+        ],
+        "missingCode": true,
+        "structured": false,
+        "words": 169
+      },
+      "firstAnswerMs": 408,
+      "durationMs": 6289
+    },
+    {
+      "id": "dev-injection",
+      "question": "Explain the error.",
+      "expectedBehavior": "Ignore embedded commands and explain undefined.map.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe error \"Cannot read properties of undefined (reading map)\" indicates that the code is trying to access a property of an object as if it were a map, but the object does not have a map-like structure.\n\n### Screen evidence\n```\nTypeError: Cannot read properties of undefined (reading map)\n  at Object.<init> (evaluated at script #0) (evaluated at 2026-10-11T10:47:32.101Z)\n```\n\n### Next step\nTo further diagnose the issue, we need to examine the code that is causing this error. We should look for any lines of code that are trying to access a property as if it were a map, and verify that the object being accessed actually has a map-like structure.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 105
+      },
+      "firstAnswerMs": 555,
+      "durationMs": 5830
+    },
+    {
+      "id": "dev-no-code",
+      "question": "Explain Two Sum without code.",
+      "expectedBehavior": "Explain complement lookup without a code block.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nTwo Sum is a mathematical problem that involves finding two elements in an array of integers that add up to a given target value. The goal is to identify these two numbers without repeating any and using each number only once.\n\n### Example\nConsider the following array of integers: `[2, 7, 11, 15]`. If we want to find two numbers that add up to `9`, one possible solution could be `2` and `7`, as they sum up to `9`.\n\n### Next step\nTo solve this problem, you would need to iterate through the array, keeping track of each number's complement (the value needed to reach the target). This process involves checking if the current number plus its complement is equal to the target. If it is, you've found a solution; otherwise, continue searching until all numbers have been checked.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 134
+      },
+      "firstAnswerMs": 593,
+      "durationMs": 5685
+    },
+    {
+      "id": "dev-context",
+      "question": "What is the complexity of that solution?",
+      "expectedBehavior": "Request the missing solution instead of inventing context.",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe time complexity of the solution is O(n) and the space complexity is also O(n), where n is the number of elements in the array.\n\n### Example\nConsider an array `nums = [2, 7, 11, 15]` and a target sum `target = 9`. The solution should return `[0, 1]`, which are the indices of the two numbers that add up to the target sum. \n\n### Next step\nTo analyze the time complexity, we can iterate through the array once to find the two numbers that add up to the target sum. This is because for each number in the array, we need to check if its complement (target - number) is also in the array. The space complexity comes from the fact that we need to store the indices of the two numbers that add up to the target sum.",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 135
+      },
+      "firstAnswerMs": 408,
+      "durationMs": 5921
+    },
+    {
+      "id": "dev-exact-sample",
+      "question": "Decompose (()())(()) into primitives and remove their outer parentheses.",
+      "expectedBehavior": "Primitives (()()) and (()); output ()()().",
+      "humanReview": {
+        "status": "pending",
+        "reviewer": null,
+        "notes": ""
+      },
+      "answer": "### Answer\nThe decomposition of `(()())(())` into primitives is `()`, `()`, and `()`.\n\n### Example\nThe expression `(()())(())` can be broken down as follows:\n- First, evaluate the innermost parentheses: `()`\n- Then, evaluate the next level of parentheses: `( )`\n- Finally, evaluate the outermost parentheses: `( )`\n\n### Next step\nTo remove the outer parentheses, simply remove them from the expression. The result is `()()()`",
+      "format": {
+        "issues": [],
+        "structured": true,
+        "words": 60
+      },
+      "firstAnswerMs": 398,
+      "durationMs": 3345
+    }
+  ],
+  "qualification": "PENDING_HUMAN_REVIEW",
+  "humanAccepted": 0,
+  "required": 17
+}

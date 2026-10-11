@@ -1,0 +1,40 @@
+name: Windows checks and private beta
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:fixtures
+      - run: npm run test:soak
+      - run: npm run setup:local
+      - run: node scripts/prepare-smoke-profile.cjs
+      - run: npm run smoke
+      - run: npm run build:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - run: npm run release:checksums
+      - uses: actions/upload-artifact@v4
+        with:
+          name: float-dot-unsigned-private-beta
+          path: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+            dist/release-manifest.json
+            PROVENANCE.md
+            THIRD_PARTY_NOTICES.md
+            CHANGELOG.md
+            docs/RELEASE_CHECKLIST.md
+          if-no-files-found: error

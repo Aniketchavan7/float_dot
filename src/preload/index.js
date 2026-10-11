@@ -5,9 +5,15 @@ function subscribe(channel, handler) {
   return () => ipcRenderer.removeListener(channel, listener);
 }
 contextBridge.exposeInMainWorld('floatDot', {
+  downloadModel: input => ipcRenderer.invoke('fd:model:download', input),
+  installAssets: input => ipcRenderer.invoke('fd:assets:install', input),
+  cancelAssets: () => ipcRenderer.invoke('fd:assets:cancel'),
+  openOllama: () => ipcRenderer.invoke('fd:ollama:website'),
+  onAssetProgress: handler => subscribe('fd:assets:progress', handler),
   status: () => ipcRenderer.invoke('fd:status'),
   settings: input => ipcRenderer.invoke('fd:settings', input),
   credentials: input => ipcRenderer.invoke('fd:credentials', input),
+  testWeb: input => ipcRenderer.invoke('fd:web:test', input),
   testConnection: input => ipcRenderer.invoke('fd:provider:test-connection', input),
   inspectModel: input => ipcRenderer.invoke('fd:provider:inspect-model', input),
   windows: () => ipcRenderer.invoke('fd:windows'),
@@ -16,6 +22,7 @@ contextBridge.exposeInMainWorld('floatDot', {
   ask: input => ipcRenderer.invoke('fd:ask', input),
   cancel: () => ipcRenderer.invoke('fd:cancel'),
   clear: () => ipcRenderer.invoke('fd:clear'),
+  openSource: input => ipcRenderer.invoke('fd:source', input),
   copy: value => ipcRenderer.invoke('fd:copy', value),
   export: value => ipcRenderer.invoke('fd:export', value),
   exportDiagnostics: () => ipcRenderer.invoke('fd:export-diagnostics'),
