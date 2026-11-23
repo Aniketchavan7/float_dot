@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-11T10:48:16.341Z",
+  "image": "sha256:85492ba800a861e3e8ff6014c430e81369fe6ca766a9990595f616d1ce95b272",
+  "correctAnswer": true,
+  "incorrectAnswerRejected": true,
+  "timeoutEnforced": true,
+  "isolation": {
+    "image": "sha256:85492ba800a861e3e8ff6014c430e81369fe6ca766a9990595f616d1ce95b272",
+    "network": "none",
+    "readOnly": true,
+    "user": "65534:65534",
+    "hostMounts": [],
+    "results": [
+      {
+        "pass": true,
+        "actual": [
+          65534,
+          true,
+          true
+        ],
+        "expected": [
+          65534,
+          true,
+          true
+        ]
+      }
+    ],
+    "passed": true
+  }
+}

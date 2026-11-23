@@ -23,6 +23,7 @@ function validateSettings(input) {
     result.provider = input.provider;
   }
   if ('baseURL' in input) result.baseURL = input.baseURL === '' ? '' : baseURL(input.baseURL);
+  if ('searxURL' in input) result.searxURL = baseURL(input.searxURL);
   if ('hotkey' in input) {
     if (typeof input.hotkey !== 'string' || !/^(?:CommandOrControl|Ctrl|Alt|Shift)(?:\+(?:CommandOrControl|Ctrl|Alt|Shift))*\+(?:Space|[A-Z0-9]|F(?:[1-9]|1[0-2]))$/.test(input.hotkey)) throw new Error('Use a shortcut such as Ctrl+Shift+Space or Ctrl+Alt+F8.');
     result.hotkey = input.hotkey;
@@ -38,7 +39,7 @@ function validateSettings(input) {
     if (!MODES.includes(input.mode)) throw new Error('Unknown assistant mode.');
     result.mode = input.mode;
   }
-  for (const key of ['confirmCapture', 'readAloud', 'reasoning', 'sendImage']) {
+  for (const key of ['confirmCapture', 'readAloud', 'reasoning', 'sendImage', 'webEnabled', 'onboardingComplete', 'guideDismissed']) {
     if (key in input) {
       if (typeof input[key] !== 'boolean') throw new Error(`Invalid ${key}.`);
       result[key] = input[key];

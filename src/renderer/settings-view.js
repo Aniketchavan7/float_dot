@@ -23,6 +23,8 @@ export class SettingsView {
 
     this.preferences = {};
     this.status = null;
+    this.draft = null;
+    this.formFields = ['provider', 'endpoint', 'model', 'send-image'];
     this.$ = id => document.getElementById(id);
   }
 
@@ -39,6 +41,7 @@ export class SettingsView {
         const key = $('api-key')?.value;
         if ($('api-key')) $('api-key').value = '';
         const updated = await this.call('settings', {
+          onboardingComplete: true,
           provider: $('provider').value,
           model: $('model').value.trim(),
           baseURL: $('provider').value === 'compatible' ? $('endpoint').value.trim() : '',
@@ -47,6 +50,7 @@ export class SettingsView {
         if (key && updated.provider !== 'ollama') {
           await this.call('credentials', { key });
         }
+        this.draft = null;
         if (this.onSave) await this.onSave(updated);
         this.state(`Provider saved · ${this.describeProvider(updated)}`);
       } catch (err) {
@@ -92,7 +96,10 @@ export class SettingsView {
     $('onboarding-cloud-choice')?.addEventListener('click', () => this.selectOnboardingPath('openai'));
     $('onboarding-complete-btn')?.addEventListener('click', () => this.completeOnboarding());
     $('onboarding-guide-btn')?.addEventListener('click', () => this.showWizard());
-    $('onboarding-close')?.addEventListener('click', () => this.hideWizard());
+    $('onboarding-close')?.addEventListener('click', () => this.dismissWizard());
+    for (const id of this.formFields) for (const event of ['input', 'change']) $(id)?.addEventListener(event, () => {
+      this.draft = Object.fromEntries(this.formFields.map(key => [key, key === 'send-image' ? $(key).checked : $(key).value]));
+    });
 
     // Export sanitized diagnostics (M08)
     $('export-diagnostics-btn')?.addEventListener('click', async () => {
@@ -126,6 +133,12 @@ export class SettingsView {
     this.hide();
   }
 
+  async dismissWizard() {
+    this.hideWizard();
+    try { this.preferences = await this.call('settings', { guideDismissed: true }); }
+    catch (err) { this.error(err.message); }
+  }
+
   hideWizard() {
     const wizard = this.$('onboarding-wizard');
     if (wizard) wizard.hidden = true;
@@ -155,7 +168,7 @@ export class SettingsView {
     if (caps.isLocal) {
       const b = document.createElement('span');
       b.className = 'cap-badge success';
-      b.textContent = '🔒 Local · Private';
+      b.textContent = 'Local inference';
       container.appendChild(b);
     }
     if (caps.supportsVision) {
@@ -239,7 +252,7 @@ export class SettingsView {
       this.updateProviderFields();
       if ($('model')) $('model').value = 'qwen3:1.7b';
       if ($('onboarding-path-note')) {
-        $('onboarding-path-note').textContent = 'Selected: Local Ollama (100% private, stays on your PC). Make sure Ollama is running.';
+        $('onboarding-path-note').textContent = 'Selected: Local Ollama (inference runs on your PC; optional web search goes online). Make sure Ollama is running.';
       }
     } else {
       cloudCard?.classList.add('selected');
@@ -254,7 +267,7 @@ export class SettingsView {
   }
 
   async completeOnboarding() {
-    this.hideWizard();
+    await this.dismissWizard();
     this.show();
     this.state('AI Settings open · Save your provider to finish setup');
   }
@@ -277,7 +290,7 @@ export class SettingsView {
     }
 
     const destination = this.preferences.provider === 'ollama'
-      ? 'Only the local Ollama server receives your question and capture.'
+      ? 'Inference runs on your local Ollama server. When web search is enabled, your question is also sent to SearXNG and search engines.'
       : `Your question and ${this.preferences.sendImage ? 'screenshot image' : 'extracted screen text'} are sent to ${this.preferences.provider === 'compatible' ? this.preferences.baseURL || 'your configured endpoint' : this.providerLabels[this.preferences.provider]}. Your provider may charge for usage.`;
 
     if ($('provider-notice')) $('provider-notice').textContent = destination;
@@ -316,14 +329,22 @@ export class SettingsView {
 
     this.renderCapabilities(status.capabilities);
 
-    const ready = rows.slice(0, 2).every(([, value]) => value);
-    if ($('setup')) $('setup').hidden = ready;
+    const ready = providerReady;
+    if (!this.initialized && $('setup')) $('setup').hidden = ready;
 
     // First run detection: if not ready and no key/model ever configured, show onboarding wizard
-    if (!ready && !status.keySaved && status.models.length === 0) {
+    if (!ready && !this.preferences.onboardingComplete && !this.preferences.guideDismissed && !status.keySaved && status.models.length === 0) {
       this.showWizard();
     }
 
+    this.initialized = true;
+    if (this.draft) {
+      for (const [id, value] of Object.entries(this.draft)) {
+        if (id === 'send-image') $(id).checked = value; else $(id).value = value;
+      }
+      $('endpoint-field').hidden = this.draft.provider !== 'compatible';
+      $('key-field').hidden = this.draft.provider === 'ollama';
+    }
     return ready;
   }
 }

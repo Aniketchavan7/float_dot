@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "frozenOn": "2026-10-11",
+  "policy": "Tune only on development. Human reviews required; keyword matches never qualify correctness. Any held-out changes require a new suite version.",
+  "files": {
+    "eval-development.json": {
+      "count": 40,
+      "sha256": "ca888df21ca461829653ae3f3b7f3f1425037af8c4cac0791ecf546fdd4fcb33"
+    },
+    "eval-held-out.json": {
+      "count": 20,
+      "sha256": "edff3e2ba3dd29edd1bb50be742ba24fd190c9815aefd13d34dd69d8fa493647"
+    }
+  }
+}

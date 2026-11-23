@@ -12,8 +12,11 @@ Entry: `src/services/providers.js`, `model.js`, `credentials.js`, `settings.js`,
 - [x] Add an explicit connection test; disclose when it makes a potentially billable inference request. Saving settings must not issue inference (`testConnection` in `providers.js` and `#test-connection-btn` in UI).
 - [x] Handle auth, quota, rate limits, disconnects, unsupported images and token limits with specific recovery actions (`categorizeError`).
 - [x] Preserve encrypted credentials and custom-endpoint isolation; snapshot provider/model configuration for each request (immutable request snapshot in `Coordinator` and `fd:ask`).
-- [x] Run and record a live text test on every adapter and an image test where supported, using configured test accounts (`tests/provider-capabilities.test.cjs`).
+- [ ] Run and record a live text test on every adapter and an image test where supported, using configured test accounts (`tests/provider-capabilities.test.cjs`).
 
 **Complete when:** contract tests and live smoke matrix pass; settings survive restart; no API key reaches renderer logs; no error causes a destination switch. An unavailable live account remains an open verification item.
 
-**Status:** Completed (9 Oct 2026). Delivered `src/services/capabilities.js`, `testConnection`, categorized recovery errors, request snapshot isolation, and Settings UI test controls. 83 automated tests passing, smoke verified. Ready for M05 & M07.
+**Status:** Implemented; live cloud qualification pending. Delivered `src/services/capabilities.js`, `testConnection`, categorized recovery errors, request snapshot isolation, and Settings UI test controls. 83 automated tests passing, smoke verified. Ready for M05 & M07.
+
+
+**10 October audit:** Earlier completion labels are implementation history, not release approval. See [current implementation and remaining gates](../MODULE_IMPLEMENTATION_AUDIT.md).

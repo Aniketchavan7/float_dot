@@ -12,7 +12,7 @@ Float Dot is an always-on-top, frameless desktop application built with Electron
 - **🪟 Sleek Floating Capsule & Acrylic Glass Overlay**: Minimal 46px toolbar capsule (`backdrop-filter: blur(28px)`), smooth rounded corners, and a draggable brand dot. Collapses instantly into a minimal floating dot when you want zero screen clutter.
 - **⚡ Zero-Friction Screen Capture**: Automatically defaults to your entire screen without forcing you to parse confusing internal OS processes. Captures on demand only—no continuous background recording, no idle polling, no hidden uploads.
 - **🎙️ Voice with Real-Time Feedback & Review**:
-  - **Idle**: Clean `Voice` button or `Ctrl + Shift + Space` shortcut.
+  - **Idle**: Click `Voice` to record. `Ctrl + Shift + Space` explicitly captures the selected screen/window.
   - **Recording**: Pulsing indicator with live audio soundwave animation and instant stop.
   - **Review & Transcribe**: Fast local Whisper speech recognition with editable transcript review before sending.
   - **Streaming**: Live markdown streaming with syntax highlighting and quick-action buttons (`Copy`, `Export note`, `Read aloud`, `Follow-up`).
@@ -111,7 +111,8 @@ dist\"Float Dot 0.1.0.exe"
 | Action | Shortcut / Control | Description |
 |---|---|---|
 | **Read Screen & Explain** | `Alt + Shift + S` or click `Read` | Captures active display/window and gives a structured explanation. |
-| **Ask with Voice** | `Ctrl + Shift + Space` or click `Voice` | Starts microphone recording; click Stop or press shortcut again to transcribe. |
+| **Ask with Voice** | Click `Voice` | Starts microphone recording; click Voice again to transcribe. Questions never trigger screenshots automatically. |
+| **Capture screen** | `Ctrl + Shift + Space` (configurable) or `Read` | Explicitly captures the selected screen/window. Region and crop buttons are also deliberate capture actions. |
 | **Collapse / Expand** | `Escape` or click `−` | Toggles between hovering capsule and compact floating dot. |
 | **Follow-up Questions** | Type in follow-up bar + `Enter` | Asks follow-up questions retaining previous screen memory. |
 | **Region Snip** | Click `✂ Region` in menu `⋯` | Drag a bounding box on your screen to capture a specific code snippet or error. |
@@ -167,3 +168,5 @@ Float Dot is currently in private pilot testing. See [docs/PILOT_GUIDE.md](docs/
 
 Float Dot is open-source under the Apache License 2.0.  
 **Privacy Assurance**: Float Dot captures screen and microphone data only when you explicitly press a button or shortcut. Telemetry is zero, and your API keys never leave your machine.
+
+Optional local-model web search: see [SearXNG setup and limits](docs/WEB_SEARCH.md).

@@ -68,11 +68,6 @@ test('canceled transcription never overwrites a newer result and stage timings e
   voice.transcribe=async()=>{time+=400;return 'new';};assert.equal(await voice.recognize([]),'new');time+=10000;voice.submitted();time+=250;
   assert.equal(voice.firstAnswer().transcriptionMs,400);assert.equal(voice.firstAnswer().firstAnswerMs,250);assert.equal(voice.firstAnswer().endOfSpeechToAnswerMs,10650);
 });
-test('only explicit screen commands request recapture, not explanatory or negated follow-ups',async()=>{
-  const {wantsFreshScreen}=await load('voice-controller.js');
-  for(const q of ['Read the screen','Could you capture my window?','Take a new screenshot','Please recapture the display'])assert.equal(wantsFreshScreen(q),true,q);
-  for(const q of ['Explain how to read the screen','Do not capture the screen','Why does this function read the window?','Explain line 12'])assert.equal(wantsFreshScreen(q),false,q);
-});
 test('main-process silence gate bypasses Whisper and rejects forged WAV',async()=>{
   const {encodeWav}=await load('audio.js');const service=new TranscriptionService('missing','unused',{spawnProcess:()=>{throw Error('Must not spawn');}});
   const silence=encodeWav([new Float32Array(16000)],16000),signal=new AbortController().signal;

@@ -49,7 +49,7 @@
           <span class="btn-icon">⚡</span>
           <span id="capture-label" class="btn-text">Read</span>
         </button>
-        <button id="record" class="toolbar-btn record-btn" title="Ask with voice (Ctrl+Shift+Space)">
+        <button id="record" class="toolbar-btn record-btn" title="Ask with voice; click again to finish">
           <span class="record-symbol">●</span>
           <span id="record-label" class="btn-text">Voice</span>
         </button>
@@ -125,6 +125,7 @@
 
       <!-- Scrollable Answer Body -->
       <div id="answer" class="answer" aria-live="off"></div>
+      <div id="web-sources" aria-label="Web references"></div>
 
       <!-- Collapsible Evidence Disclosure -->
       <details id="evidence-details" class="evidence-details">
@@ -144,12 +145,12 @@
         <button id="follow-up" class="text-btn-pill" hidden>Follow-up</button>
         <button id="speak" class="icon-btn-pill" title="Read answer aloud">🔊</button>
       </div>
-      <label class="check compact"><input id="reuse-capture" type="checkbox" checked>Keep current screen for follow-ups</label>
+      <label class="check compact"><input id="reuse-capture" type="checkbox" checked>Use attached screenshot for questions (no new capture)</label>
     </section>
 
     <!-- Optional Capture Review Modal (Only if confirmCapture preference is true) -->
     <section id="capture-review" class="card-drawer" hidden>
-      <div class="section-heading"><h2>Captured preview</h2><button id="discard" class="text-button">Discard</button></div>
+      <div class="section-heading"><h2 id="review-title">Captured preview</h2><button id="discard" class="text-button">Discard</button></div>
       <label for="review-question">Review or correct your question</label>
       <textarea id="review-question" rows="3" maxlength="2000"></textarea>
       <details>
@@ -230,8 +231,8 @@
       <p id="onboarding-path-note" class="help success">Selected: Local Ollama (100% private, stays on your PC). Make sure Ollama is running.</p>
 
       <div class="shortcuts-cheatsheet">
-        <div class="shortcut-item"><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> <span>Read Screen & Explain</span></div>
-        <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> <span>Voice Ask</span></div>
+        <div class="shortcut-item"><span>Read button: capture screen · Microphone button: ask by voice</span></div>
+        <div class="shortcut-item"><kbd id="guide-hotkey">Ctrl + Shift + Space</kbd> <span>Capture screen</span></div>
         <div class="shortcut-item"><kbd>Esc</kbd> <span>Cancel or Collapse</span></div>
       </div>
 
@@ -242,7 +243,17 @@
     <section id="setup" class="card-drawer" hidden>
       <div class="section-heading"><h2>AI Settings</h2><button id="onboarding-guide-btn" class="text-button">Welcome Guide</button><button id="refresh-status" class="text-button">Check status</button><button id="settings-close" class="text-button">Close settings</button></div>
       <div id="readiness"></div>
-      <p id="voice-setup" class="help" hidden>Voice setup is optional. In a source checkout, run <code>npm run setup:local</code> to install local speech files, then Check status. Packaged builds need the bundled speech files restored by reinstalling the app. You can keep using typing and Read.</p>
+      <p id="voice-setup" class="help" hidden>Voice is optional. Install speech files below to use your microphone.</p>
+      <details><summary>Optional local components</summary>
+        <p class="help">Downloads from GitHub and Hugging Face only when you click Install. Files are verified before use. Cloud text and image questions need neither component.</p>
+        <button id="install-ocr" class="text-button">Install English OCR (about 4 MB)</button>
+        <button id="install-speech" class="text-button">Install local speech (about 180 MB)</button>
+        <button id="cancel-assets" class="text-button" hidden>Cancel download</button>
+        <p id="asset-progress" class="help" role="status"></p>
+        <button id="download-model" class="text-button">Download model entered below (Ollama)</button>
+        <p class="help">Model downloads can be several GB. Ollama must already be installed and running. Cancel stops this request; Ollama may retain partial downloads for retry.</p>
+        <button id="open-ollama" class="text-button">Get Ollama for Windows</button>
+      </details>
       <label for="provider">AI provider</label>
       <select id="provider">
         <option value="ollama">Ollama · local models</option>
@@ -274,12 +285,19 @@
       <p id="provider-notice" class="help"></p>
       <label for="microphone">Microphone</label>
       <select id="microphone"><option value="">System default</option></select>
-      <label for="hotkey">Voice shortcut</label>
+      <label for="hotkey">Capture shortcut</label>
       <input id="hotkey" type="text" maxlength="80" placeholder="CommandOrControl+Shift+Space">
       <button id="save-hotkey" class="text-button">Save shortcut</button>
       <label class="check"><input id="confirm-capture" type="checkbox">Review capture preview before sending</label>
       <label class="check"><input id="read-aloud" type="checkbox">Read completed answers aloud</label>
       <label class="check"><input id="reasoning" type="checkbox">Extended reasoning compatibility mode</label>
+      <label class="check"><input id="web-enabled" type="checkbox">Search web with SearXNG</label>
+      <p class="help">Sends your question as a search query online. Search snippets are references; generated code is not executed.</p>
+      <label for="searx-url">SearXNG URL (JSON enabled)</label>
+      <input id="searx-url" type="url" placeholder="http://127.0.0.1:8888">
+      <button id="save-web" class="text-button">Save search endpoint</button>
+      <button id="test-web" class="text-button">Test search connection</button>
+      <p id="web-connection-status" class="help" role="status" hidden></p>
       <label for="theme">Appearance</label>
       <select id="theme">
         <option value="system">Follow system</option>

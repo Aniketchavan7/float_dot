@@ -1,0 +1,2 @@
+# Frozen corpus hashes must be identical on Windows and Linux checkouts.
+tests/fixtures/eval-*.json text eol=lf

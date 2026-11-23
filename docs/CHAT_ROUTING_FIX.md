@@ -1,0 +1,15 @@
+# Normal questions do not capture the desktop
+
+**Updated capture rule:** Screenshots require pressing Read/Region/crop or the configured capture shortcut (default Ctrl+Shift+Space). Text and voice never trigger capture, even when the question says “read the screen” or “take a screenshot.” The former voice shortcut now performs capture; the Voice button starts/stops recording. Explicit file/clipboard imports still require their buttons. This supersedes the automatic screen-command routing described below and in earlier module handoffs.
+
+9 October 2026. A user report (“Two Sum” triggered a desktop screenshot and no answer) exposed a routing defect: typed questions without an existing capture entered `prepare()`, and the main answer handler rejected requests without a capture ID. That could make an ordinary question depend on capture/OCR/review before generation even started.
+
+The toolbar now sends text-only chat by default. Empty Send gives an instruction rather than capturing. Read, Region, file/clipboard actions and explicit screen-reading commands retain deliberate capture. The answer-card follow-up can reuse already attached evidence when its checkbox is selected; unchecking it sends chat without capturing again. Voice questions without screen context also work without screenshots and can still be corrected before sending.
+
+Main accepts a null context ID as chat, bypasses image capability requirements for it, and sends no image/OCR evidence. Chat and capture histories are separated. Screen requests still require the exact valid capture ID. Chat prompts use Answer/Example/Next step instead of requesting screen evidence. “Two Sum” receives an explanation policy even if a legacy DSA preference is saved; explicit hint requests still receive hints.
+
+Empty model responses now emit an error instead of a blank completed answer. An unreachable local server points to starting Ollama or selecting another provider. The exact cause of the user's original missing answer was not logged, so it is not attributed conclusively to one of these paths.
+
+Verification: 92 tests passed; full Electron smoke passed. The actual toolbar “two sum” smoke test blocks capture, verifies zero capture calls, no image/evidence in the provider request, a visible answer, and no capture-review interruption. Its provider is a loopback fixture; live model quality is not certified by this test. Packaging passed and the archived main process contains the chat fix.
+
+The saved provider was Ollama/qwen3:1.7b and its server was initially unavailable. Started the installed local Ollama runtime in the background, then sent “two sum” through the real Coordinator/model path with null screen context. It returned a nonempty explanation and the correct `[2,7,11,15]`, target 9, indices 0/1 example. Its algorithm prose described a set where an index-returning implementation needs a value-to-index map (or additional index tracking); this is a remaining model-quality issue, not proof of release-level correctness. The test used no screenshot or paid API.

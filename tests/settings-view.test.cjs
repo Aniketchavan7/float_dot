@@ -152,3 +152,13 @@ test('SettingsView: saves provider settings with onBeforeSave stop hook', async 
   assert.equal(savedSettings?.provider, 'anthropic');
   assert.equal(savedSettings?.model, 'claude-3-5-sonnet');
 });
+
+test('SettingsView: status refresh preserves unsaved provider edits and open drawer', async()=>{
+ const dom=createDOM();const {SettingsView}=await load('settings-view.js');
+ const sv=new SettingsView({call:async()=>({}),state:()=>{},error:()=>{}});sv.init();
+ const status={settings:{provider:'ollama',model:'qwen3:1.7b',onboardingComplete:true},models:[{name:'qwen3:1.7b'}],keySaved:false,ocrReady:false,speechReady:false};
+ assert.equal(sv.refresh(status),true,'Text chat must not require OCR');sv.show();
+ dom.get('model').value='my-unsaved-model';dom.get('model').dispatchEvent('input');
+ sv.refresh(status);
+ assert.equal(dom.get('model').value,'my-unsaved-model');assert.equal(dom.get('setup').hidden,false);
+});

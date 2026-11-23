@@ -35,7 +35,7 @@ These are starting design targets, to validate with users rather than immutable 
 
 Reusable foundations exist: capture/OCR, microphone/Whisper, five provider adapters, encrypted keys, streaming, cancellation, answer rendering and local packaging. The latest regression run is 64/64 plus fixtures and extended Electron smoke; these are not proof of release readiness. Live cloud accounts, clean-machine installation and physical desktop journeys still need testing.
 
-M02/M03 now provide a compact native toolbar, passive window restoration and a cancellable region capture service. Automated/native checks are recorded in [the verification handoff](M02_M03_VERIFICATION.md); physical release checks remain open. There is no `.github` workflow directory at this review. Modules below finish and separate the existing implementation rather than rebuild it.
+M02/M03 now provide a compact native toolbar, passive window restoration and a cancellable region capture service. Automated/native checks are recorded in [the verification handoff](M02_M03_VERIFICATION.md); physical release checks remain open. A Windows CI workflow is now present; a remote CI run remains pending. Modules below finish and separate the existing implementation rather than rebuild it.
 
 ## Module board
 
@@ -45,17 +45,17 @@ Estimates are original focused engineering person-day budgets, including verific
 | --- | --- | --- | --- | --- | --- |
 | [M00](modules/M00-contracts.md) | Shared contracts and release scope | **Completed** | — | Together | 1–2 days |
 | [M01](modules/M01-overlay-ui.md) | Minimal toolbar and answer card | **Completed** | M00 | **Aniket** | 3–5 days |
-| [M02](modules/M02-window-behavior.md) | Focus, placement, tray and recovery | **Built & Verified** | M00; integrate M01 | Codex-assisted | 4–6 days |
-| [M03](modules/M03-capture.md) | Reliable screenshot/region pipeline | **Built & Verified** | M00; integrate M02 | Codex-assisted | 3–5 days |
-| [M04](modules/M04-voice.md) | Reliable microphone-to-question flow | **Built & Verified** | M00 | Either | 3–5 days |
-| [M05](modules/M05-answer-engine.md) | Prompt/context/answer quality | **Built & Verified** | M00; integrate M03/M04/M06 | Together | 5–8 days |
+| [M02](modules/M02-window-behavior.md) | Focus, placement, tray and recovery | **Implemented; release gates open** | M00; integrate M01 | Codex-assisted | 4–6 days |
+| [M03](modules/M03-capture.md) | Reliable screenshot/region pipeline | **Implemented; release gates open** | M00; integrate M02 | Codex-assisted | 3–5 days |
+| [M04](modules/M04-voice.md) | Reliable microphone-to-question flow | **Implemented; release gates open** | M00 | Either | 3–5 days |
+| [M05](modules/M05-answer-engine.md) | Prompt/context/answer quality | **Implemented; release gates open** | M00; integrate M03/M04/M06 | Together | 5–8 days |
 | [M06](modules/M06-providers.md) | Provider/model setup and resilience | **Completed** | M00 | Codex-assisted | 3–5 days |
-| [M07](modules/M07-onboarding.md) | First-run setup and preferences | **Built & Verified** | M00; integrate M01/M06 | **Aniket** | 2–4 days |
-| [M08](modules/M08-hardening.md) | Reliability, privacy and performance | **Built & Verified** | M00; final pass M01–M07 | Codex-assisted | 3–5 days |
-| [M09](modules/M09-distribution.md) | Installer, CI and release artifacts | **Packaged & Built** | M00; RC requires M08 | Either | 4–6 days |
-| [M10](modules/M10-pilot-launch.md) | Pilot, support and launch decision | **Pilot-Ready** | M09 release candidate | **Aniket** | 3–5 days + pilot window |
+| [M07](modules/M07-onboarding.md) | First-run setup and preferences | **Implemented; release gates open** | M00; integrate M01/M06 | **Aniket** | 2–4 days |
+| [M08](modules/M08-hardening.md) | Reliability, privacy and performance | **Implemented; release gates open** | M00; final pass M01–M07 | Codex-assisted | 3–5 days |
+| [M09](modules/M09-distribution.md) | Installer, CI and release artifacts | **Installer/portable built; qualification open** | M00; RC requires M08 | Either | 4–6 days |
+| [M10](modules/M10-pilot-launch.md) | Pilot, support and launch decision | **Pilot protocol prepared** | M09 release candidate | **Aniket** | 3–5 days + pilot window |
 
-**All modules M00 through M10 are built, tested, and pilot-ready.** Automated tests pass at 89/89, fixture runner passes at 6/6, soak tests pass at 100/100 cycles, and the packaged application is built at `dist/win-unpacked/Float Dot.exe`.
+**Release qualification remains open.** See the [10 October module audit](MODULE_IMPLEMENTATION_AUDIT.md) for source-verified implementation status and the [release checklist](RELEASE_CHECKLIST.md) for required external gates. Earlier module labels describe implementation, not completed live-account, physical-device, clean-machine or pilot validation.
 
 M05's budget covers one focused prompt/evaluation cycle; if correctness gates fail, budget more work or reduce supported launch workflows. Do not waive the gate to meet a date.
 

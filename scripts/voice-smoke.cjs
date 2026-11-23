@@ -1,8 +1,10 @@
 const assert=require('node:assert/strict');
-module.exports=async({panel,speech,getReceived})=>{
+module.exports=async({panel,speech,captureService,getReceived})=>{
   const original=speech.transcribe;
-  const recognized='Explain nums two with target greater than nine.';
-  const corrected='Explain nums[2] with target >= 9. Include a short example.';
+  const originalCapture=captureService.capture;let captureCalls=0;
+  captureService.capture=async(...args)=>{captureCalls++;return originalCapture.apply(captureService,args);};
+  const recognized='Read the screen and explain nums two with target greater than nine.';
+  const corrected='Read the screen and explain nums[2] with target >= 9. Include a short example.';
   try {
     // Synthetic recognition isolates UI delivery from acoustic accuracy.
     speech.transcribe=async()=>{await new Promise(r=>setTimeout(r,300));return recognized;};
@@ -36,6 +38,7 @@ module.exports=async({panel,speech,getReceived})=>{
     assert.ok(finalQuestion.includes(corrected),'Provider did not receive corrected technical question');
     assert.ok(!finalQuestion.includes(recognized),'Uncorrected recognition leaked into provider question');
     assert.ok(result.recordingStopped);
+    assert.equal(captureCalls,1,'Voice or transcript confirmation caused an automatic screenshot');
     console.log('VOICE_REVIEW_SMOKE_OK',JSON.stringify({...result,correctedProviderQuestion:true,recognition:'synthetic adapter',microphone:'Electron fake input'}));
-  } finally {speech.transcribe=original;}
+  } finally {speech.transcribe=original;captureService.capture=originalCapture;}
 };

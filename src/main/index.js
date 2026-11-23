@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, screen, globalShortcut, session, protocol, clipboard, dialog, Tray, Menu, nativeImage, safeStorage, powerMonitor } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, screen, globalShortcut, session, protocol, clipboard, dialog, Tray, Menu, nativeImage, safeStorage, powerMonitor, shell } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
@@ -9,16 +9,25 @@ const { SettingsStore } = require('../services/settings');
 const { CredentialStore } = require('../services/credentials');
 const { streamProvider, testConnection, LABELS } = require('../services/providers');
 const { inspectModel, validateModelSelection } = require('../services/capabilities');
+const { downloadModel } = require('../services/model-download');
+const { AssetInstaller } = require('../services/asset-installer');
 const { OcrService } = require('../services/ocr');
 const { TranscriptionService } = require('../services/transcription');
 const { listModels } = require('../services/model');
 const { Coordinator } = require('../services/coordinator');
 const { MeetingService } = require('../services/meeting');
 const { text, MODES, validateAudio, validateSettings } = require('../shared/validation');
+const { validateDownloadEvent } = require('../shared/contracts');
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'floatdot', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 app.setName('Float Dot');
 const smoke = process.argv.includes('--smoke');
+const verifyPackage = process.argv.includes('--verify-package');
+if (verifyPackage) {
+  const profile = path.join(app.getPath('temp'), `FloatDot-package-check-${process.pid}`);
+  require('node:fs').mkdirSync(profile, { recursive:true });
+  app.setPath('userData', profile);
+}
 if (smoke) {
   app.commandLine.appendSwitch('use-fake-device-for-media-stream');
   app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
@@ -29,6 +38,8 @@ const assets = app.isPackaged ? path.join(process.resourcesPath, 'models') : pat
 const temp = path.join(app.getPath('userData'), 'temporary-media');
 const settings = new SettingsStore(app.getPath('userData'));
 const credentials = new CredentialStore(app.getPath('userData'), safeStorage);
+let modelDownload = null;
+const installer = new AssetInstaller(path.join(app.getPath('userData'), 'optional-assets'));
 const ocr = new OcrService(assets);
 const speech = new TranscriptionService(assets, temp);
 let panel, dot, context = null, preparation = null, quitting = false, requestRevision = 0;
@@ -38,21 +49,25 @@ function registerHotkey(value) {
   try { shortcutManager.replace(value); registeredHotkey = value; shortcutError = null; }
   catch (error) { shortcutError = error.message; throw error; }
 }
+const { withWeb, searchWeb } = require('../services/web-tools');
 const infer = input => {
   const config = input.snapshot || { ...settings.value, apiKey: credentials.get(settings.value) };
-  return streamProvider({
-    ...input,
+  return withWeb(input, config, enriched => streamProvider({
+    ...enriched,
     provider: config.provider,
     baseURL: config.baseURL,
     apiKey: config.apiKey !== undefined ? config.apiKey : credentials.get(config),
     reasoning: config.reasoning,
     image: config.sendImage ? input.image : undefined
-  });
+  }));
 };
-async function checkProvider() {
-  validateModelSelection(settings.value.provider, settings.value.model, { sendImage: settings.value.sendImage });
+async function checkProvider(sendImage = settings.value.sendImage) {
+  validateModelSelection(settings.value.provider, settings.value.model, { sendImage });
   if (settings.value.provider === 'ollama') {
-    if (!(await listModels()).some(model => model.name === settings.value.model)) throw new Error('Download or choose an installed Ollama model.');
+    let models;
+    try { models=await listModels(); }
+    catch { throw new Error('Cannot reach Ollama. Start Ollama and retry, or choose another provider in AI Settings.'); }
+    if (!models.some(model => model.name === settings.value.model)) throw new Error('Download or choose an installed Ollama model.');
   } else if (settings.value.provider === 'compatible') {
     if (!settings.value.baseURL) throw new Error('Set the compatible API base URL in AI settings.');
   } else if (!credentials.get(settings.value)) throw new Error('Save your API key in AI settings.');
@@ -64,7 +79,10 @@ async function checkImageSupport(signal) {
   const info = await response.json();
   if (Array.isArray(info.capabilities) && !info.capabilities.includes('vision')) throw new Error('This Ollama model does not support screenshots. Switch off image mode to use OCR text, or select a vision model.');
 }
+let sourceRequest = null, sourceLinks = [];
 const coordinator = new Coordinator({ infer, maxHistory: 8, emit: value => {
+  if (value.type === 'started') { sourceRequest = value.requestId; sourceLinks = []; }
+  if (value.type === 'done') sourceLinks = value.sources || [];
   if (panel && !panel.isDestroyed()) panel.webContents.send('fd:answer', value);
 } });
 const meeting = new MeetingService({
@@ -114,16 +132,46 @@ async function status() {
 }
 function installIPC() {
   handle('fd:status', status);
+  handle('fd:assets:install', async input => {
+    const kind = input?.kind;
+    const requestId = text(input?.requestId, 'Download request', 100);
+    if (modelDownload) throw new Error('Finish or cancel the model download first.');
+    const directory = await installer.install(kind, progress => { if (panel && !panel.isDestroyed()) panel.webContents.send('fd:assets:progress', validateDownloadEvent({...progress, requestId})); });
+    if (kind === 'ocr') ocr.directory = directory;
+    else speech.directory = directory;
+    return true;
+  });
+  handle('fd:assets:cancel', () => { installer.cancel(); modelDownload?.abort(); return true; });
+  handle('fd:model:download', async input => {
+    const model = input?.model;
+    const requestId = text(input?.requestId, 'Download request', 100);
+    if (modelDownload || installer.active) throw new Error('Finish or cancel the current download first.');
+    const job = new AbortController(); modelDownload = job;
+    try { await downloadModel(model, job.signal, progress => { if (panel && !panel.isDestroyed()) panel.webContents.send('fd:assets:progress', validateDownloadEvent({...progress, requestId})); }); return true; }
+    finally { if (modelDownload === job) modelDownload = null; }
+  });
+  handle('fd:ollama:website', async () => { await shell.openExternal('https://ollama.com/download/windows'); return true; });
   handle('fd:settings', async input => {
     const validated = validateSettings(input);
     const previous = settings.value.hotkey;
     if (validated.hotkey) registerHotkey(validated.hotkey);
-    try { cancel(); const value = await settings.update(validated); coordinator.clear(); return value; }
+    try {
+      const destinationChanged = ['provider','model','baseURL','sendImage'].some(key => key in validated && validated[key] !== settings.value[key]);
+      cancel(); const value = await settings.update(validated); coordinator.clear();
+      sourceLinks = []; sourceRequest = null;
+      if (destinationChanged) context = null;
+      return value;
+    }
     catch (error) { if (registeredHotkey !== previous) registerHotkey(previous); throw error; }
   });
   handle('fd:credentials', async input => {
     if (typeof input?.key !== 'string') throw new Error('Invalid key input.');
     await credentials.set(settings.value, input.key); return true;
+  });
+  handle('fd:web:test', async input => {
+    const config = validateSettings({ searxURL: input?.endpoint });
+    const sources = await searchWeb({ endpoint: config.searxURL, query: 'JavaScript Map documentation' });
+    return { resultCount: sources.length };
   });
   handle('fd:provider:test-connection', async input => {
     const provider = input?.provider || settings.value.provider;
@@ -175,13 +223,14 @@ function installIPC() {
   });
   handle('fd:ask', async input => {
     const question = text(input?.question, 'Question');
-    if (!context || input.contextId !== context.id) throw new Error('Capture a window first.');
+    const useCapture = input.contextId !== undefined && input.contextId !== null;
+    if (useCapture && (!context || input.contextId !== context.id)) throw new Error('The selected capture is no longer available. Use Read to capture it again.');
     if (!MODES.includes(input.mode)) throw new Error('Unknown mode.');
     if (input.mode === 'meeting') throw new Error('Use the meeting transcript to generate meeting notes.');
-    const revision = requestRevision, capturedContext = context;
-    if (context.imageMode !== settings.value.sendImage) throw new Error('Capture again after changing image/text mode.');
-    await checkProvider();
-    if (revision !== requestRevision || capturedContext !== context) throw new Error('Request canceled.');
+    const revision = requestRevision, capturedContext = useCapture ? context : null;
+    if (useCapture && context.imageMode !== settings.value.sendImage) throw new Error('Capture again after changing image/text mode.');
+    await checkProvider(useCapture && settings.value.sendImage);
+    if (revision !== requestRevision || (useCapture && capturedContext !== context)) throw new Error('Request canceled.');
     const currentConfig = { ...settings.value };
     const snapshot = {
       provider: currentConfig.provider,
@@ -189,14 +238,21 @@ function installIPC() {
       baseURL: currentConfig.baseURL,
       apiKey: credentials.get(currentConfig),
       reasoning: currentConfig.reasoning,
-      sendImage: currentConfig.sendImage
+      webEnabled: currentConfig.webEnabled,
+      searxURL: currentConfig.searxURL,
+      sendImage: useCapture && currentConfig.sendImage
     };
     // Runs asynchronously; answer events are scoped by the coordinator request ID.
-    void coordinator.ask({ question, mode: input.mode, context: { ...context }, model: snapshot.model, snapshot });
+    void coordinator.ask({ question, mode: input.mode, context: capturedContext ? { ...capturedContext } : null, model: snapshot.model, snapshot });
     return { accepted: true };
   });
   handle('fd:cancel', () => { cancel(); return true; });
-  handle('fd:clear', () => { cancel(); meeting.clear(); coordinator.clear(); context = null; return true; });
+  handle('fd:clear', () => { cancel(); meeting.clear(); coordinator.clear(); context = null; sourceLinks = []; sourceRequest = null; return true; });
+  handle('fd:source', async input => {
+    const source = input?.requestId === sourceRequest && sourceLinks.find(s => s.id === input.id);
+    if (!source) throw new Error('Source is no longer available.');
+    await shell.openExternal(source.url); return true;
+  });
   handle('fd:copy', value => { clipboard.writeText(text(value, 'Answer', 24000)); return true; });
   handle('fd:export', async value => {
     const content = text(value, 'Export', 30000);
@@ -315,7 +371,7 @@ function createWindows() {
   }
   let crashes = 0;
   panel.webContents.on('render-process-gone', () => {
-    cancel(); context=null; coordinator.clear();
+    cancel(); installer.cancel(); modelDownload?.abort(); context=null; sourceLinks=[]; sourceRequest=null; coordinator.clear();
     if (++crashes <= 2) panel.webContents.reload();
     else { windowManager.needsReload = true; windowManager.collapse(); }
   });
@@ -440,7 +496,10 @@ async function smokeTest() {
     if (credentials.get({ provider: 'openai' }) !== 'synthetic-smoke-key') throw new Error('OS key roundtrip failed.');
     await credentials.set({ provider: 'openai' }, '');
     console.log('PROVIDER_IMAGE_SMOKE_OK', JSON.stringify({ endpoint: 'loopback test server', paidAPICalled: false, osEncryption: true }));
-    await require('../../scripts/voice-smoke.cjs')({panel,speech,getReceived:()=>received});
+    await require('../../scripts/voice-smoke.cjs')({panel,speech,captureService,getReceived:()=>received});
+    await require('../../scripts/chat-smoke.cjs')({panel,captureService,getReceived:()=>received});
+    await require('../../scripts/web-smoke.cjs')({panel,captureService,getReceived:()=>received});
+    await require('../../scripts/onboarding-smoke.cjs')({panel,installer,assets});
   } finally {
     target.destroy(); await settings.update(originalSettings);
     await new Promise(resolve => server.close(resolve));
@@ -454,16 +513,20 @@ else app.whenReady().then(async () => {
   if (path.dirname(path.resolve(temp)) !== path.resolve(app.getPath('userData'))) throw new Error('Invalid temporary-media directory.');
   await fs.rm(temp, { recursive: true, force: true }); // verified app-owned child directory only
   await settings.load(); await credentials.load();
+  if (verifyPackage) await settings.update({provider:'compatible',baseURL:'http://127.0.0.1:1/v1',model:'package-check',onboardingComplete:true,guideDismissed:true});
+  ocr.directory = await installer.installed('ocr') || assets;
+  speech.directory = await installer.installed('speech') || assets;
   windowManager = new WindowManager({screen,directory:app.getPath('userData'),reportError:message => console.error(message)});
   await windowManager.load();
   regionSelector = new RegionSelector({BrowserWindow,ipcMain,preload:path.join(root,'src/preload/region.js')});
   configureSession(); installIPC(); createWindows();
   if (smoke) await smokeTest();
+  else if (verifyPackage) await require('./package-check')({app,panel,windowManager,ocr,speech,screen});
 }).catch(error => { console.error(error.message); app.exit(1); });
 app.on('second-instance', () => windowManager?.show());
 let flushed = false;
 app.on('before-quit', event => {
-  if (!quitting) { quitting = true; cancel(); regionSelector?.cancel(); }
+  if (!quitting) { quitting = true; installer.cancel(); modelDownload?.abort(); cancel(); regionSelector?.cancel(); }
   globalShortcut.unregisterAll();
   if (!flushed && windowManager) { event.preventDefault(); flushed = true; windowManager.save().finally(() => app.quit()); }
 });

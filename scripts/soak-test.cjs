@@ -94,7 +94,7 @@ async function runSoakTest() {
     throw new Error(`Heap delta ${heapDeltaMB} MB exceeded threshold (>50MB)! Potential leak.`);
   }
 
-  console.log('\n🎉 SOAK TEST PASSED: Zero resource leaks, clean cancellation, bounded memory.\n');
+  console.log('\n🎉 SOAK TEST PASSED: Coordinator cancellation and history checks passed; native resources require separate measurement.\n');
 }
 
 runSoakTest().catch(err => {

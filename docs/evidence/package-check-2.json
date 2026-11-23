@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-11T10:49:23.958Z",
+  "packaged": true,
+  "platform": "win32",
+  "release": "10.0.26300",
+  "cpuModel": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "ramGB": 15.710990905761719,
+  "displays": [
+    {
+      "size": {
+        "width": 1536,
+        "height": 864
+      },
+      "scale": 1.25
+    }
+  ],
+  "ui": {
+    "bridge": "object",
+    "secure": true,
+    "question": true,
+    "downloads": true
+  },
+  "ocrReady": true,
+  "ocrMatched": true,
+  "speechReady": true,
+  "revealCycles": 100,
+  "revealP95Ms": 12.873199999999997,
+  "idleAppCpuAverage": 0.0920836037703168,
+  "idleAppWorkingSetPeakMB": 699.671875,
+  "samples": [
+    {
+      "cpu": 0.1379517532636064,
+      "workingSetMB": 699.671875
+    },
+    {
+      "cpu": 0.04392254961873892,
+      "workingSetMB": 699.2421875
+    },
+    {
+      "cpu": 0.008287533407239386,
+      "workingSetMB": 699.24609375
+    },
+    {
+      "cpu": 0.006523903642389027,
+      "workingSetMB": 698.8828125
+    },
+    {
+      "cpu": 0.05194181596809227,
+      "workingSetMB": 694.53515625
+    },
+    {
+      "cpu": 0.00915362155623549,
+      "workingSetMB": 692.62109375
+    },
+    {
+      "cpu": 0.16957943355797409,
+      "workingSetMB": 690.94921875
+    },
+    {
+      "cpu": 0.0465127875918773,
+      "workingSetMB": 674.33203125
+    },
+    {
+      "cpu": 0.1491132143935403,
+      "workingSetMB": 674.34765625
+    },
+    {
+      "cpu": 0.29784942470347486,
+      "workingSetMB": 674.38671875
+    }
+  ],
+  "budgets": {
+    "reveal": true,
+    "cpu": true,
+    "memory": false
+  },
+  "limits": "Local packaged smoke, not clean-VM installation. Separate Ollama/Whisper inference processes excluded. No real microphone test."
+}
